@@ -44,10 +44,10 @@ Develop on a ~300-500 case subset for fast CPU iteration, then scale to the full
 
 ## 3. Architecture
 
-Fresh git repo, Python package layout:
+Git repo initialized at the existing FYP folder root (`/Users/junaid/Documents/FYP`); the thesis `.docx` files and this `docs/` tree live alongside the code. Python package layout:
 
 ```
-fyp-twin/
+<repo root = FYP folder>/
   twin/
     config.py            # paths, seed, horizon=5min, MAP threshold=65, obs window, stride
     data/
