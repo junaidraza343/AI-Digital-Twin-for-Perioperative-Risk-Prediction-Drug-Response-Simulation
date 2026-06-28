@@ -41,6 +41,7 @@ def label_windows(map_series: np.ndarray) -> pd.DataFrame:
         valid = horizon[~np.isnan(horizon)]
         if len(valid) < c.HORIZON_MIN_VALID * c.HORIZON_SECONDS:
             continue
+        # Count of valid (non-NaN) samples below threshold; interpreted as cumulative measured seconds.
         seconds_below = int(np.sum(valid < c.MAP_THRESHOLD))
         y = 1 if seconds_below >= c.EVENT_MIN_SECONDS else 0
         if y == 1:
