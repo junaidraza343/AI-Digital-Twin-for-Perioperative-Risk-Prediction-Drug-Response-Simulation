@@ -22,3 +22,8 @@ def test_curve_has_one_value_per_threshold():
     ts = np.array([0.1, 0.5, 0.9])
     curve = net_benefit_curve(y, p, ts)
     assert len(curve) == 3
+
+
+def test_net_benefit_pt_one_is_safe():
+    y = np.array([0, 1]); p = np.array([0.5, 0.9])
+    assert net_benefit(y, p, pt=1.0) == float("-inf")

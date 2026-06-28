@@ -4,6 +4,8 @@ import numpy as np
 
 def net_benefit(y, p, pt):
     """Net benefit at threshold probability pt (Vickers & Elkin 2006)."""
+    if pt >= 1.0:
+        return float("-inf")
     y = np.asarray(y); p = np.asarray(p)
     n = len(y)
     pred = p >= pt

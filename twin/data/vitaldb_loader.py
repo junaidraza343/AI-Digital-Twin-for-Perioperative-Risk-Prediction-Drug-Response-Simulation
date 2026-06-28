@@ -1,9 +1,15 @@
 """Lazy, cached access to VitalDB numeric tracks and the clinical table."""
+import hashlib
 import numpy as np
 import pandas as pd
 import twin.config as c
 
 CASES_URL = "https://api.vitaldb.net/cases"
+
+
+def _tracks_tag():
+    h = hashlib.md5(",".join(c.NUMERIC_TRACKS).encode()).hexdigest()[:8]
+    return h
 
 
 def _default_loader(caseid, tracks, interval):
@@ -14,7 +20,7 @@ def _default_loader(caseid, tracks, interval):
 def load_numeric_frame(caseid, loader_fn=_default_loader) -> pd.DataFrame:
     """Return a 1 Hz DataFrame of NUMERIC_TRACKS for one case, cached on disk."""
     c.DATA_CACHE.mkdir(parents=True, exist_ok=True)
-    cache_path = c.DATA_CACHE / f"case_{caseid}.parquet"
+    cache_path = c.DATA_CACHE / f"case_{caseid}_{_tracks_tag()}.parquet"
     if cache_path.exists():
         return pd.read_parquet(cache_path)
 

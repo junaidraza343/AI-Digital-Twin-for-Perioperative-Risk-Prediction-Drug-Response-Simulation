@@ -44,6 +44,8 @@ def extract_features(frame: pd.DataFrame, t_end: int, static_row: dict) -> dict:
 
     map_track = c.MAP_TRACK if (c.MAP_TRACK in frame and frame[c.MAP_TRACK].notna().any()) else c.MAP_TRACK_FALLBACK
     map_win = frame[map_track].to_numpy(dtype=float)[start:t_end + 1]
+    map_win = map_win.copy()
+    map_win[(map_win < 10) | (map_win > 250)] = np.nan
     _summ("map", map_win, out)
 
     for track in _TREND_TRACKS:

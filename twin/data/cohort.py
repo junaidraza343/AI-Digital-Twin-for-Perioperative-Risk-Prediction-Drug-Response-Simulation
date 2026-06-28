@@ -18,6 +18,7 @@ def filter_cohort(cases_df: pd.DataFrame):
     df = df[~df["department"].isin(c.EXCLUDED_DEPARTMENTS)]
     funnel.append(("department", len(df)))
 
+    # 'contains General' intentionally includes combined-technique cases (e.g. General/Regional).
     df = df[df["ane_type"].astype(str).str.contains("General", case=False, na=False)]
     funnel.append(("general_anesthesia", len(df)))
 

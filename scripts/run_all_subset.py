@@ -10,7 +10,8 @@ from scripts.run_baseline import run
 
 def main(n_cases: int):
     eligible, funnel = build_cohort()
-    subset = eligible.head(n_cases)
+    n = min(n_cases, len(eligible))
+    subset = eligible.sample(n=n, random_state=c.SEED).reset_index(drop=True)
     print(f"Building windows for {len(subset)} cases...")
     windows = build_dataset(subset)
     c.RESULTS_DIR.mkdir(parents=True, exist_ok=True)
