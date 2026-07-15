@@ -1,0 +1,16 @@
+.git
+.gitignore
+__pycache__/
+*.pyc
+.pytest_cache/
+.extracted/
+data_cache/
+results/
+notebooks/
+docs/
+tests/
+scripts/
+*.docx
+*.log
+.streamlit_run.log
+.vitaldb_run.log
