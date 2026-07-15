@@ -1,0 +1,101 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Digital Twin — ML Ops Console</title>
+  <link rel="icon" href="data:," />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Chakra+Petch:wght@500;600;700&family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Sans:wght@400;500;600&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="/styles.css" />
+</head>
+<body class="soft">
+  <div class="scanlines" aria-hidden="true"></div>
+
+  <header class="topbar">
+    <div class="brand">
+      <span class="led"></span>
+      <div class="brand-text">
+        <h1>DIGITAL&nbsp;TWIN&nbsp;·&nbsp;ML&nbsp;OPS&nbsp;CONSOLE</h1>
+        <p>Training pipeline · model performance · selection-bias study</p>
+      </div>
+    </div>
+    <div class="brand-meta">
+      <a class="tag linktag" href="/">← Clinical monitor</a>
+      <span class="clock" id="clock">--:--:--</span>
+    </div>
+  </header>
+
+  <main class="admin">
+    <!-- STATUS -->
+    <section class="stat-grid" id="statGrid"></section>
+
+    <div class="admin-cols">
+      <!-- LEFT: training controls -->
+      <aside class="admin-left">
+        <section class="panel">
+          <div class="panel-head"><h2>Training pipeline</h2></div>
+          <p class="hint">Retrain on the existing dataset (fast, no network).</p>
+          <button class="btn btn-grad-warm full" id="btnRetrain">Retrain predictor + GBDT ⟳</button>
+          <button class="btn full" id="btnRescan">Rescan demo cases</button>
+          <div class="joblog" id="trainLog" hidden>
+            <div class="job-head"><span id="trainStage">Training…</span><span id="trainPct">0%</span></div>
+            <div class="progress"><div class="progress-fill" id="trainFill"></div></div>
+          </div>
+          <div id="trainMsg" class="hint"></div>
+        </section>
+
+        <section class="panel accent-real">
+          <div class="panel-head"><h2>Build dataset · VitalDB</h2></div>
+          <p class="hint">Run the full pipeline on N cases (network + a few minutes). Replaces the current dataset.</p>
+          <label class="ctl"><span class="lbl">Cases <b id="nCasesOut">100</b></span>
+            <input type="range" id="nCases" min="20" max="600" step="20" value="100" /></label>
+          <button class="btn btn-grad-cool full" id="btnBuild">Start build ▶</button>
+          <div class="joblog" id="jobLog" hidden>
+            <div class="job-head"><span id="jobStage">—</span><span id="jobPct">0%</span></div>
+            <div class="progress"><div class="progress-fill" id="jobFill"></div></div>
+            <div class="job-head"><span></span><span id="jobElapsed"></span></div>
+            <pre id="jobOut"></pre>
+          </div>
+        </section>
+
+        <section class="panel">
+          <div class="panel-head"><h2>System</h2></div>
+          <div class="kv"><span>Runtime</span><b id="sysRuntime">—</b></div>
+          <div class="kv"><span>Seed</span><b id="sysSeed">—</b></div>
+          <div class="kv"><span>Horizon</span><b id="sysHorizon">—</b></div>
+          <div class="kv"><span>MAP threshold</span><b id="sysThresh">—</b></div>
+          <div class="kv"><span>Last train</span><b id="sysLastTrain">—</b></div>
+          <div class="kv"><span>Artifact</span><b id="sysArtifact">—</b></div>
+        </section>
+      </aside>
+
+      <!-- RIGHT: metrics + curves -->
+      <section class="admin-right">
+        <section class="panel">
+          <div class="panel-head"><h2>Selection-bias study · model × regime</h2></div>
+          <p class="hint" style="margin-top:-6px">Same features, three sampling regimes. Compare AUROC, PPV, calibration.</p>
+          <div class="table-wrap"><table id="metricsTable"></table></div>
+          <p class="hint">Headline: PPV collapses biased→unbiased, and GBDT shows no
+            clinically meaningful gain over MAP-only on unbiased data (except the gray zone).</p>
+        </section>
+
+        <section class="panel">
+          <div class="panel-head"><h2>Performance curves · unbiased test</h2>
+            <span class="legend-inline"><i class="sw-cyan"></i>MAP-only <i class="sw-amber"></i>GBDT</span>
+          </div>
+          <div class="curve-grid">
+            <figure><figcaption>ROC</figcaption><canvas id="rocC"></canvas></figure>
+            <figure><figcaption>Precision–Recall</figcaption><canvas id="prC"></canvas></figure>
+            <figure><figcaption>Calibration</figcaption><canvas id="calC"></canvas></figure>
+            <figure><figcaption>Decision curve · net benefit</figcaption><canvas id="dcaC"></canvas></figure>
+          </div>
+        </section>
+      </section>
+    </div>
+  </main>
+
+  <script src="/admin.js"></script>
+</body>
+</html>

@@ -15,10 +15,12 @@ from pydantic import BaseModel, Field
 from twin.pkpd.engine import Patient, project_map, project_band, ioh_risk
 from twin.pkpd.fitting import fit_deltas
 from twin.predict import load_predictor, ioh_probability
+from api.admin import router as admin_router
 
 FRONTEND_DIR = Path(__file__).resolve().parents[1] / "frontend"
 
 app = FastAPI(title="Perioperative Digital Twin", version="2.0")
+app.include_router(admin_router)
 
 # Load the trained predictor once at startup (None if not trained yet).
 PREDICTOR, PREDICTOR_META = load_predictor()
@@ -154,6 +156,11 @@ def health():
 @app.get("/")
 def index():
     return FileResponse(FRONTEND_DIR / "index.html")
+
+
+@app.get("/admin")
+def admin_page():
+    return FileResponse(FRONTEND_DIR / "admin.html")
 
 
 app.mount("/", StaticFiles(directory=FRONTEND_DIR), name="static")

@@ -148,5 +148,55 @@
     "caseid": 5015,
     "baseline": 95,
     "dip_min": 52
+  },
+  {
+    "caseid": 81,
+    "baseline": 81,
+    "dip_min": 53
+  },
+  {
+    "caseid": 107,
+    "baseline": 78,
+    "dip_min": 53
+  },
+  {
+    "caseid": 407,
+    "baseline": 88,
+    "dip_min": 53
+  },
+  {
+    "caseid": 804,
+    "baseline": 76,
+    "dip_min": 53
+  },
+  {
+    "caseid": 932,
+    "baseline": 90,
+    "dip_min": 53
+  },
+  {
+    "caseid": 1066,
+    "baseline": 88,
+    "dip_min": 53
+  },
+  {
+    "caseid": 1983,
+    "baseline": 75,
+    "dip_min": 53
+  },
+  {
+    "caseid": 2755,
+    "baseline": 81,
+    "dip_min": 53
+  },
+  {
+    "caseid": 4889,
+    "baseline": 98,
+    "dip_min": 53
+  },
+  {
+    "caseid": 5856,
+    "baseline": 81,
+    "dip_min": 53
   }
 ]

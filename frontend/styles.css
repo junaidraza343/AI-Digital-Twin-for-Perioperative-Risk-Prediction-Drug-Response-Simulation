@@ -277,3 +277,198 @@ input[type=range]::-moz-range-thumb {
   .controls { order: 2; }
   .vitals { grid-template-columns: 1fr 1fr; }
 }
+
+/* ============================================================
+   Admin / ML-ops console
+   ============================================================ */
+.linktag { text-decoration: none; color: var(--cyan); border-color: rgba(53,224,200,.35);
+  background: rgba(53,224,200,.06); }
+.linktag:hover { box-shadow: 0 0 14px rgba(53,224,200,.2); }
+
+.admin { max-width: 1600px; margin: 0 auto; padding: 20px 26px 40px; display: flex; flex-direction: column; gap: 18px; }
+
+.stat-grid { display: grid; grid-template-columns: repeat(6, 1fr); gap: 12px; }
+.stat {
+  background: linear-gradient(180deg, var(--panel), var(--bg-2));
+  border: 1px solid var(--line-soft); border-radius: var(--r); padding: 13px 16px;
+  animation: rise .5s cubic-bezier(.2,.7,.2,1) both;
+}
+.stat .s-label { font-family: var(--disp); font-size: 10px; letter-spacing: .16em; color: var(--ink-faint); }
+.stat .s-value { font-family: var(--mono); font-size: 24px; font-weight: 600; color: var(--cyan); margin-top: 6px; }
+.stat .s-value.ok { color: var(--green); }
+.stat .s-value.off { color: var(--ink-dim); }
+
+.admin-cols { display: grid; grid-template-columns: 320px 1fr; gap: 18px; align-items: start; }
+.admin-left { display: flex; flex-direction: column; gap: 16px; }
+.admin-right { display: flex; flex-direction: column; gap: 16px; }
+.btn.full { width: 100%; margin-bottom: 8px; }
+.ctl .lbl { display: flex; justify-content: space-between; font-size: 11.5px; color: var(--ink-dim); margin-bottom: 7px; }
+.ctl .lbl b { font-family: var(--mono); color: var(--ink); }
+
+.joblog { margin-top: 12px; border-top: 1px solid var(--line-soft); padding-top: 10px; }
+.job-head { display: flex; justify-content: space-between; font-family: var(--mono); font-size: 11px; color: var(--amber); margin-bottom: 6px; }
+.joblog pre { font-family: var(--mono); font-size: 10px; color: var(--ink-dim); background: #04080b;
+  border: 1px solid var(--line); border-radius: 6px; padding: 8px; max-height: 200px; overflow: auto; white-space: pre-wrap; }
+
+.table-wrap { overflow-x: auto; }
+#metricsTable { width: 100%; border-collapse: collapse; font-family: var(--mono); font-size: 12px; }
+#metricsTable th, #metricsTable td { padding: 8px 12px; text-align: right; border-bottom: 1px solid var(--line-soft); }
+#metricsTable th { color: var(--ink-faint); font-family: var(--disp); font-size: 10px; letter-spacing: .12em; text-transform: uppercase; }
+#metricsTable td:first-child, #metricsTable th:first-child { text-align: left; color: var(--ink); }
+#metricsTable tr.biased td { color: var(--amber); }
+#metricsTable tr.unbiased td { color: var(--cyan); }
+#metricsTable tr.gray_challenge td { color: var(--ink-dim); }
+
+.legend-inline { font-family: var(--mono); font-size: 10.5px; color: var(--ink-dim); display: flex; gap: 12px; align-items: center; }
+.legend-inline i { display: inline-block; width: 12px; height: 3px; border-radius: 2px; margin-right: 5px; vertical-align: middle; }
+.sw-cyan { background: var(--cyan); } .sw-amber { background: var(--amber); }
+
+.curve-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+.curve-grid figure { background: #04080b; border: 1px solid var(--line); border-radius: 8px; padding: 8px; }
+.curve-grid figcaption { font-family: var(--disp); font-size: 10px; letter-spacing: .14em; color: var(--ink-dim); margin: 2px 4px 6px; }
+.curve-grid canvas { width: 100%; height: 190px; display: block; }
+
+@media (max-width: 1080px) {
+  .stat-grid { grid-template-columns: repeat(3, 1fr); }
+  .admin-cols { grid-template-columns: 1fr; }
+  .curve-grid { grid-template-columns: 1fr; }
+}
+
+/* progress bar + training overlay */
+.progress { height: 8px; background: #0c1620; border: 1px solid var(--line);
+  border-radius: 5px; overflow: hidden; margin: 4px 0 8px; }
+.progress-fill { height: 100%; width: 0%; border-radius: 5px;
+  background: linear-gradient(90deg, var(--cyan), var(--green));
+  box-shadow: 0 0 12px rgba(53,224,200,.5); transition: width .4s ease; }
+#jobPct { color: var(--cyan); }
+
+.overlay[hidden] { display: none; }
+.overlay { position: fixed; inset: 0; z-index: 500;
+  background: rgba(4,8,11,.78); backdrop-filter: blur(4px);
+  display: flex; align-items: center; justify-content: center; }
+.overlay-box { text-align: center; }
+.overlay-msg { font-family: var(--disp); letter-spacing: .14em; color: var(--cyan);
+  margin-top: 20px; font-size: 14px; text-shadow: var(--glow) rgba(53,224,200,.5); }
+.spinner { width: 54px; height: 54px; margin: 0 auto; border-radius: 50%;
+  border: 3px solid rgba(53,224,200,.2); border-top-color: var(--cyan);
+  animation: spin .9s linear infinite; box-shadow: 0 0 22px rgba(53,224,200,.35); }
+@keyframes spin { to { transform: rotate(360deg); } }
+
+/* ============================================================
+   SOFT THEME — refined clinical monitor (body.soft)
+   ============================================================ */
+body.soft {
+  background:
+    radial-gradient(130% 90% at 82% -12%, #0f2430 0%, transparent 52%),
+    radial-gradient(90% 70% at -5% 108%, #0b1c18 0%, transparent 48%),
+    #060b10;
+}
+.soft-h1 { font-family: var(--sans); font-weight: 700; font-size: 22px; letter-spacing: 0; color: #eef5f8; }
+.pill-row { display: flex; gap: 8px; }
+.pill {
+  font-family: var(--mono); font-size: 10px; letter-spacing: .08em; text-transform: uppercase;
+  color: var(--cyan); border: 1px solid rgba(53,224,200,.32); background: rgba(53,224,200,.05);
+  padding: 6px 13px; border-radius: 20px; text-decoration: none; transition: .16s;
+}
+.pill-solid { background: rgba(53,224,200,.14); }
+.pill:hover { box-shadow: 0 0 14px rgba(53,224,200,.22); }
+
+body.soft .console { display: block; max-width: 1640px; margin: 0 auto; padding: 22px 28px 44px; }
+body.soft .vitals { margin-bottom: 18px; gap: 16px; }
+
+.card {
+  background: linear-gradient(180deg, #0e1620, #0a1017);
+  border: 1px solid #1a2836; border-radius: 18px; padding: 20px 22px;
+  box-shadow: 0 12px 32px rgba(0,0,0,.38), inset 0 1px 0 rgba(255,255,255,.02);
+  animation: rise .55s cubic-bezier(.2,.7,.2,1) both;
+}
+.workspace { display: grid; grid-template-columns: 1.55fr 1fr; gap: 18px; align-items: start; }
+.col-charts, .col-controls { display: flex; flex-direction: column; gap: 18px; }
+.bottom-row { display: grid; grid-template-columns: 1fr 1fr; gap: 18px; }
+
+.card-head { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 14px; gap: 12px; }
+.soft-title { font-family: var(--sans); font-weight: 600; font-size: 16px; color: #e8f0f4; letter-spacing: 0; }
+.soft-title.sm { font-size: 11.5px; text-transform: uppercase; letter-spacing: .16em; color: var(--ink-dim); font-family: var(--disp); }
+.soft-sub { font-size: 11.5px; color: var(--ink-faint); margin-top: 4px; }
+.chip { font-family: var(--mono); font-size: 10px; color: var(--ink-dim); border: 1px solid var(--line); border-radius: 14px; padding: 4px 11px; letter-spacing: .06em; }
+.accent-amber { color: var(--amber) !important; }
+.accent-green { color: var(--green) !important; }
+.accent-pink  { color: #ff8fb0 !important; }
+.divider { height: 1px; background: var(--line-soft); margin: 16px 0; }
+
+body.soft #chart { height: 340px; width: 100%; display: block; }
+body.soft #ceChart { height: 150px; width: 100%; display: block; }
+
+/* legend as inline pills inside card head */
+body.soft .legend { position: static; background: none; border: none; padding: 0; backdrop-filter: none; gap: 14px; }
+
+/* vitals refined */
+body.soft .vital { border-radius: 18px; padding: 16px 20px; border: 1px solid #1a2836; }
+body.soft .vital.ml .v-value { color: var(--cyan); }
+body.soft .vital.ce .v-value { color: var(--green); text-shadow: var(--glow) rgba(70,224,122,.35); }
+.risk-bar { margin-top: 12px; height: 6px; background: #152230; border-radius: 4px; overflow: hidden; }
+.risk-fill { height: 100%; width: 0%; border-radius: 4px; transition: width .45s ease;
+  background: linear-gradient(90deg, var(--amber), #ff6a3d); }
+.vital.risk.low .risk-fill { background: linear-gradient(90deg, var(--green), #2fd0a8); }
+.vital.risk.high .risk-fill { background: linear-gradient(90deg, var(--red), #ff7a3d); }
+
+/* colored slider fill */
+.slider input[type=range] {
+  --fill: 50%; --acc: var(--cyan);
+  background: linear-gradient(to right, var(--acc) var(--fill), #16242f var(--fill));
+}
+.slider.amber input[type=range] { --acc: var(--amber); }
+.slider.green input[type=range] { --acc: var(--green); }
+.slider.amber input[type=range]::-webkit-slider-thumb { background: var(--amber); box-shadow: 0 0 10px rgba(255,176,32,.75); }
+.slider.green input[type=range]::-webkit-slider-thumb { background: var(--green); box-shadow: 0 0 10px rgba(70,224,122,.75); }
+.slider.amber input[type=range]::-moz-range-thumb { background: var(--amber); }
+.slider.green input[type=range]::-moz-range-thumb { background: var(--green); }
+
+/* big numbers on drug panels */
+.big-num { font-family: var(--mono); font-size: 26px; font-weight: 600; line-height: 1; }
+.big-num em { font-style: normal; font-size: 10px; color: var(--ink-faint); margin-left: 5px; }
+.big-num.amber { color: var(--amber); }
+.big-num.green { color: var(--green); }
+
+/* select full width in soft cards */
+body.soft .select { width: 100%; }
+
+@media (max-width: 1080px) {
+  .workspace { grid-template-columns: 1fr; }
+  .bottom-row { grid-template-columns: 1fr; }
+  body.soft .vitals { grid-template-columns: 1fr 1fr; }
+}
+
+/* ============================================================
+   SOFT THEME — ML Ops console (body.soft admin)
+   ============================================================ */
+body.soft .admin .stat, body.soft .admin .panel {
+  border-radius: 18px; border: 1px solid #1a2836; padding: 20px 22px;
+  background: linear-gradient(180deg, #0e1620, #0a1017);
+  box-shadow: 0 12px 32px rgba(0,0,0,.34), inset 0 1px 0 rgba(255,255,255,.02);
+}
+body.soft .admin .stat-grid { gap: 16px; }
+body.soft .admin .stat .s-value { font-size: 28px; }
+/* colored stat values echo the clinical palette */
+body.soft .admin .stat:nth-child(3) .s-value { color: var(--amber); }   /* prevalence */
+body.soft .admin .stat:nth-child(5) .s-value { color: var(--cyan); }    /* AUROC */
+body.soft .admin .stat:nth-child(4) .s-value.ok { color: var(--green); }/* predictor */
+
+/* gradient action buttons */
+.btn-grad-warm, .btn-grad-cool { border: none; color: #04140f; font-weight: 700;
+  font-family: var(--disp); letter-spacing: .05em; transition: filter .15s, transform .1s; }
+.btn-grad-warm { background: linear-gradient(90deg, var(--amber), var(--green)); }
+.btn-grad-cool { background: linear-gradient(90deg, #22d3ee, var(--cyan)); }
+.btn-grad-warm:hover, .btn-grad-cool:hover { filter: brightness(1.08); }
+.btn-grad-warm:active, .btn-grad-cool:active { transform: translateY(1px); }
+.btn-grad-warm:disabled, .btn-grad-cool:disabled { filter: grayscale(.5) brightness(.7); }
+
+/* system key-value rows */
+.kv { display: flex; justify-content: space-between; align-items: baseline;
+  font-size: 12px; color: var(--ink-dim); padding: 7px 0; border-bottom: 1px solid var(--line-soft); }
+.kv:last-child { border-bottom: none; }
+.kv b { font-family: var(--mono); font-weight: 500; color: var(--ink); }
+
+/* curve cards rounded in soft theme */
+body.soft .curve-grid figure { border-radius: 14px; }
+body.soft .admin .table-wrap { margin-top: 6px; }

@@ -19,11 +19,23 @@ const state = {
 };
 
 const OUT_FMT = {
-  age: v => `${v}`, weight: v => `${v} kg`, height: v => `${v} cm`,
+  age: v => `${v} yrs`, weight: v => `${v} kg`, height: v => `${v} cm`,
   map0: v => `${v} mmHg`, duration: v => `${v} min`,
   propofol: v => `${v}`, norepi: v => `${v}`, norepi_start: v => `${v} min`,
   delta_ec50: v => Number(v).toFixed(2), delta_ke0: v => Number(v).toFixed(2),
 };
+
+/* colored slider fill (left of thumb) */
+function fillTrack(el) {
+  const min = +el.min, max = +el.max, v = +el.value;
+  el.style.setProperty("--fill", ((v - min) / (max - min)) * 100 + "%");
+}
+
+/* big-number readouts on the drug panels (keep the trailing <em> unit) */
+function setBig(id, val) {
+  const el = document.getElementById(id);
+  if (el && el.firstChild) el.firstChild.nodeValue = String(val);
+}
 
 /* ---------- wire controls ---------- */
 function bindRange(id) {
@@ -31,9 +43,13 @@ function bindRange(id) {
   el.addEventListener("input", () => {
     state[id] = parseFloat(el.value);
     setOut(id);
+    fillTrack(el);
+    if (id === "propofol") setBig("propBig", el.value);
+    if (id === "norepi") setBig("neBig", el.value);
     schedule();
   });
   setOut(id);
+  fillTrack(el);
 }
 function setOut(id) {
   const out = document.querySelector(`[data-out="${id}"]`);
@@ -70,8 +86,9 @@ function applyPreset(name) {
   const p = PRESETS[name]; if (!p) return;
   Object.assign(state, p);
   for (const k of ["age","weight","height","map0","propofol","norepi"]) {
-    const el = document.getElementById(k); if (el) { el.value = state[k]; setOut(k); }
+    const el = document.getElementById(k); if (el) { el.value = state[k]; setOut(k); fillTrack(el); }
   }
+  setBig("propBig", state.propofol); setBig("neBig", state.norepi);
   document.querySelectorAll("#sex button").forEach(x =>
     x.classList.toggle("active", x.dataset.sex === state.sex));
   schedule(true);
@@ -118,6 +135,8 @@ function render(d) {
   const probEl = document.getElementById("iohProb");
   if (d.ioh_prob == null) probEl.textContent = "n/a";
   else setVal("iohProb", Math.round(d.ioh_prob * 100), "%");
+  const rf = document.getElementById("riskFill");
+  if (rf) rf.style.width = ((d.ioh_prob ?? 0) * 100).toFixed(0) + "%";
   drawChart(d);
   drawCe(d);
 }
@@ -203,6 +222,15 @@ function drawChart(d, progress = 1) {
     ctx.restore();
   }
 
+  // gradient area fill under the population twin
+  const area = ctx.createLinearGradient(0, padT, 0, h - padB);
+  area.addColorStop(0, "rgba(53,224,200,0.30)");
+  area.addColorStop(1, "rgba(53,224,200,0)");
+  ctx.beginPath();
+  for (let i = 0; i < upto; i++) { const x = X(d.t_min[i]), y = Y(d.map_pop[i]); i ? ctx.lineTo(x, y) : ctx.moveTo(x, y); }
+  ctx.lineTo(X(d.t_min[upto - 1]), Y(MAP_MIN)); ctx.lineTo(X(d.t_min[0]), Y(MAP_MIN)); ctx.closePath();
+  ctx.fillStyle = area; ctx.fill();
+
   // population trace
   trace(ctx, d.t_min, d.map_pop, X, Y, upto, C.cyan, 2.2);
   // personalized trace
@@ -241,12 +269,15 @@ function drawCe(d) {
     ctx.beginPath(); ctx.moveTo(padL, Y(c)); ctx.lineTo(w - padR, Y(c)); ctx.stroke();
     ctx.fillText(c.toFixed(1), padL - 6, Y(c));
   }
-  // area fill
+  // green gradient area fill
+  const g = ctx.createLinearGradient(0, padT, 0, h - padB);
+  g.addColorStop(0, "rgba(70,224,122,0.34)");
+  g.addColorStop(1, "rgba(70,224,122,0)");
   ctx.beginPath(); ctx.moveTo(X(0), Y(0));
   for (let i = 0; i < n; i++) ctx.lineTo(X(d.t_min[i]), Y(d.ce[i]));
   ctx.lineTo(X(tMax), Y(0)); ctx.closePath();
-  ctx.fillStyle = "rgba(201,139,255,0.12)"; ctx.fill();
-  trace(ctx, d.t_min, d.ce, X, Y, n, C.ne, 1.8);
+  ctx.fillStyle = g; ctx.fill();
+  trace(ctx, d.t_min, d.ce, X, Y, n, "#46e07a", 2.0);
 }
 
 /* animate the trace sweep on load / preset */
@@ -311,7 +342,7 @@ function setPatient(p) {
   Object.assign(state, { age: p.age, weight: p.weight, height: p.height,
     sex: p.sex, map0: p.map0, duration: 15 });
   for (const k of ["age","weight","height","map0","duration"]) {
-    const el = document.getElementById(k); if (el) { el.value = state[k]; setOut(k); }
+    const el = document.getElementById(k); if (el) { el.value = state[k]; setOut(k); fillTrack(el); }
   }
   document.querySelectorAll("#sex button").forEach(x =>
     x.classList.toggle("active", x.dataset.sex === state.sex));
