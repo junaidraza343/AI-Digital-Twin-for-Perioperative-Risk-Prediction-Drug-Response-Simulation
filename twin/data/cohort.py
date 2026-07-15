@@ -28,7 +28,13 @@ def filter_cohort(cases_df: pd.DataFrame):
     df = df[~df["asa"].isin(c.EXCLUDED_ASA)]
     funnel.append(("asa_not_5_6", len(df)))
 
-    df = df[_preop_map(df) >= c.MAP_THRESHOLD]
-    funnel.append(("preop_map>=65", len(df)))
+    # Preop-MAP exclusion requires preop BP, which the open VitalDB /cases table
+    # does not provide. Apply it only when both columns exist; otherwise record
+    # the step as skipped so the funnel stays honest and traceable.
+    if {"preop_sbp", "preop_dbp"}.issubset(df.columns):
+        df = df[_preop_map(df) >= c.MAP_THRESHOLD]
+        funnel.append(("preop_map>=65", len(df)))
+    else:
+        funnel.append(("preop_map>=65 (skipped: no preop BP)", len(df)))
 
     return df.reset_index(drop=True), funnel

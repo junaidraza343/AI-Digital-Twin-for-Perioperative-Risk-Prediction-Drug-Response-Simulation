@@ -48,3 +48,41 @@ def project_map(patient: Patient, prop_schedule, norepi_schedule,
     t = np.arange(len(map_traj)) * dt
     below = float(np.sum(map_traj < c.MAP_THRESHOLD) * dt / 60.0)
     return MapProjection(t=t, map=map_traj, ce=ce, minutes_below_65=below)
+
+
+def ioh_risk(proj: MapProjection) -> str:
+    """Categorical IOH risk from the projected MAP nadir.
+
+    High: MAP breaches the 65 mmHg threshold. Medium: dips into the 65-75 gray
+    zone. Low: stays >= 75. Mirrors the stable/gray/overt window categories.
+    """
+    m = float(proj.map.min())
+    if m < c.MAP_THRESHOLD:
+        return "High"
+    if m < c.GRAY_HIGH:
+        return "Medium"
+    return "Low"
+
+
+def project_band(patient: Patient, prop_schedule, norepi_schedule,
+                 duration: float = 900.0, dt: float = 1.0, deltas=None,
+                 spread: float = 0.2):
+    """Confidence band from PK-PD parameter uncertainty.
+
+    Perturbs the two most influential parameters (EC50 sensitivity, ke0 onset)
+    by +/- spread around the chosen deltas and returns (lo, hi, central) MAP
+    envelopes. Deterministic.
+    """
+    base = dict(deltas or {})
+    central = project_map(patient, prop_schedule, norepi_schedule,
+                          duration, dt, base or None).map
+    runs = [central]
+    for ec in (-spread, spread):
+        for ke in (-spread, spread):
+            d = dict(base)
+            d["EC50"] = d.get("EC50", 0.0) + ec
+            d["ke0"] = d.get("ke0", 0.0) + ke
+            runs.append(project_map(patient, prop_schedule, norepi_schedule,
+                                    duration, dt, d).map)
+    stack = np.vstack(runs)
+    return stack.min(axis=0), stack.max(axis=0), central
