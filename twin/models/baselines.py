@@ -1,6 +1,7 @@
-"""Baseline IOH predictors: MAP-only logistic and gradient-boosted trees."""
+"""Baseline IOH predictors: MAP-only logistic, GBDT, random forest, elastic-net."""
 import numpy as np
 from sklearn.linear_model import LogisticRegression
+from sklearn.ensemble import RandomForestClassifier
 from sklearn.pipeline import make_pipeline
 from sklearn.preprocessing import StandardScaler
 from sklearn.impute import SimpleImputer
@@ -54,3 +55,54 @@ class GbdtModel:
 
     def predict_proba(self, X):
         return self.model.predict_proba(X[self.columns])[:, 1]
+
+
+def _numeric_cols(X):
+    return [col for col in X.columns if X[col].dtype != object]
+
+
+class RandomForestModel:
+    """Random forest on the full numeric feature set (no scaling needed)."""
+
+    def __init__(self):
+        self.model = make_pipeline(
+            SimpleImputer(strategy="median"),
+            RandomForestClassifier(
+                n_estimators=300, max_depth=None, min_samples_leaf=5,
+                random_state=c.SEED, n_jobs=-1,
+            ),
+        )
+        self.columns = None
+
+    def fit(self, X, y):
+        self.columns = _numeric_cols(X)
+        self.model.fit(X[self.columns], y)
+        return self
+
+    def predict_proba(self, X):
+        return self.model.predict_proba(X[self.columns])[:, 1]
+
+
+class ElasticLogisticModel:
+    """Elastic-net logistic regression on the FULL feature set.
+
+    The linear counterpart to MAP-only: uses every covariate + trend, so the gap
+    to MAP-only isolates how much the extra features add (vs the nonlinear GBDT).
+    """
+
+    def __init__(self):
+        self.pipe = make_pipeline(
+            SimpleImputer(strategy="median"),
+            StandardScaler(),
+            LogisticRegression(penalty="elasticnet", solver="saga", l1_ratio=0.5,
+                               C=1.0, max_iter=2000, random_state=c.SEED),
+        )
+        self.columns = None
+
+    def fit(self, X, y):
+        self.columns = _numeric_cols(X)
+        self.pipe.fit(X[self.columns], y)
+        return self
+
+    def predict_proba(self, X):
+        return self.pipe.predict_proba(X[self.columns])[:, 1]

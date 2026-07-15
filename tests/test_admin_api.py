@@ -36,7 +36,7 @@ def test_curves_has_both_models():
 @pytest.mark.skipif(not _HAS_DATA, reason="no windows.parquet")
 def test_retrain_predictor():
     d = client.post("/api/admin/train-predictor").json()
-    assert d["ok"] is True and len(d["rows"]) == 6
+    assert d["ok"] is True and len(d["rows"]) == 12  # 4 models x 3 regimes
 
 
 def test_build_job_lifecycle(monkeypatch):

@@ -80,6 +80,9 @@ def metrics():
     sb = _read_csv("selection_bias_results.csv")
     if sb is None:
         return {"available": False, "rows": []}
+    dn = _read_csv("deepnet_results.csv")   # optional GPU deep-net rows
+    if dn is not None:
+        sb = pd.concat([sb, dn], ignore_index=True)
     return {"available": True, "rows": _records(sb)}
 
 

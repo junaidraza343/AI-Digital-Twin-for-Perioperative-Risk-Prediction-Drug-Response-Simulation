@@ -10,3 +10,4 @@ matplotlib>=3.7
 streamlit>=1.30
 fastapi>=0.110
 uvicorn[standard]>=0.27
+torch>=2.0

@@ -3,7 +3,9 @@ import numpy as np
 import pandas as pd
 import twin.config as c
 from twin.data.splits import make_splits
-from twin.models.baselines import MapOnlyModel, GbdtModel
+from twin.models.baselines import (
+    MapOnlyModel, GbdtModel, RandomForestModel, ElasticLogisticModel,
+)
 from twin.eval.selection_bias import make_biased, make_unbiased, evaluate
 
 FEATURE_DROP = {"caseid", "t_end", "y", "category", "split"}
@@ -32,7 +34,13 @@ def run(windows: pd.DataFrame, case_meta: pd.DataFrame) -> pd.DataFrame:
         ("gray_challenge", test[test.category.isin(["overt", "gray"])].reset_index(drop=True)),
     ]
 
-    for name, model in [("map_only", MapOnlyModel()), ("gbdt", GbdtModel())]:
+    model_specs = [
+        ("map_only", MapOnlyModel()),
+        ("elastic_full", ElasticLogisticModel()),
+        ("random_forest", RandomForestModel()),
+        ("gbdt", GbdtModel()),
+    ]
+    for name, model in model_specs:
         model.fit(Xtr, ytr)
         trained[name] = model
         for regime, subset in regimes:

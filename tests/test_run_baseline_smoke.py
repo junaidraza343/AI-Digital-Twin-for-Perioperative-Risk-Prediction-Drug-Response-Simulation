@@ -48,13 +48,12 @@ def test_run_baseline_smoke(tmp_path, monkeypatch):
     # Must return a DataFrame with all three regime names for both models
     assert isinstance(result, pd.DataFrame)
     assert set(result["regime"].unique()) >= {"biased", "unbiased", "gray_challenge"}
-    assert set(result["model"].unique()) >= {"map_only", "gbdt"}
+    models = {"map_only", "elastic_full", "random_forest", "gbdt"}
+    assert set(result["model"].unique()) == models
 
     # Check every (model, regime) combination is present
-    expected_pairs = {
-        ("map_only", "biased"), ("map_only", "unbiased"), ("map_only", "gray_challenge"),
-        ("gbdt", "biased"), ("gbdt", "unbiased"), ("gbdt", "gray_challenge"),
-    }
+    expected_pairs = {(m, r) for m in models
+                      for r in ("biased", "unbiased", "gray_challenge")}
     actual_pairs = set(zip(result["model"], result["regime"]))
     assert expected_pairs == actual_pairs
 

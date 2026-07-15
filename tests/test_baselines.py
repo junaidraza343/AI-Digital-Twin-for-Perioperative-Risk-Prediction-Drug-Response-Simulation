@@ -1,6 +1,8 @@
 import numpy as np
 import pandas as pd
-from twin.models.baselines import MapOnlyModel, GbdtModel
+from twin.models.baselines import (
+    MapOnlyModel, GbdtModel, RandomForestModel, ElasticLogisticModel,
+)
 
 
 def _separable():
@@ -32,3 +34,21 @@ def test_gbdt_learns_and_is_deterministic():
     np.testing.assert_allclose(p1, p2)
     from twin.eval.metrics import auroc
     assert auroc(y, p1) > 0.85
+
+
+def test_random_forest_learns_on_full_features():
+    X, y = _separable()
+    p = RandomForestModel().fit(X, y).predict_proba(X)
+    assert p.shape == (len(y),) and ((p >= 0) & (p <= 1)).all()
+    from twin.eval.metrics import auroc
+    assert auroc(y, p) > 0.85
+
+
+def test_elastic_full_learns_and_uses_all_numeric_columns():
+    X, y = _separable()
+    m = ElasticLogisticModel().fit(X, y)
+    assert set(m.columns) == {"map_last", "map_slope", "hr_mean"}
+    p = m.predict_proba(X)
+    assert ((p >= 0) & (p <= 1)).all()
+    from twin.eval.metrics import auroc
+    assert auroc(y, p) > 0.8
