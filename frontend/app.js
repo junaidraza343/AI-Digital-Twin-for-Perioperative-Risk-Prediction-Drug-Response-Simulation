@@ -115,6 +115,9 @@ function render(d) {
   setVal("minMap", d.min_map, "mmHg");
   setVal("minsBelow", d.minutes_below_65, "min");
   setVal("ceEnd", d.ce_end, "µg/mL");
+  const probEl = document.getElementById("iohProb");
+  if (d.ioh_prob == null) probEl.textContent = "n/a";
+  else setVal("iohProb", Math.round(d.ioh_prob * 100), "%");
   drawChart(d);
   drawCe(d);
 }
@@ -138,6 +141,7 @@ function prep(canvas) {
 
 const MAP_MIN = 40, MAP_MAX = 120;
 let lastData = null;
+let realCase = null;   // loaded VitalDB case bundle (measured MAP)
 let animT = 0, animing = false;
 
 function drawChart(d, progress = 1) {
@@ -187,6 +191,17 @@ function drawChart(d, progress = 1) {
   ctx.setLineDash([]);
 
   const upto = Math.max(1, Math.floor(n * progress));
+
+  // measured MAP from a real VitalDB case (drawn under the twin traces)
+  if (realCase && realCase.t_min && realCase.map_real) {
+    ctx.save();
+    ctx.setLineDash([2, 3]);
+    ctx.beginPath();
+    const rt = realCase.t_min, rm = realCase.map_real;
+    for (let i = 0; i < rt.length; i++) { const x = X(rt[i]), y = Y(rm[i]); i ? ctx.lineTo(x, y) : ctx.moveTo(x, y); }
+    ctx.strokeStyle = "#f5f7fa"; ctx.lineWidth = 1.6; ctx.globalAlpha = 0.9; ctx.stroke();
+    ctx.restore();
+  }
 
   // population trace
   trace(ctx, d.t_min, d.map_pop, X, Y, upto, C.cyan, 2.2);
@@ -254,8 +269,100 @@ setInterval(() => {
 /* redraw on resize */
 let rz; window.addEventListener("resize", () => { clearTimeout(rz); rz = setTimeout(() => lastData && (drawChart(lastData), drawCe(lastData)), 120); });
 
+/* ---------- real VitalDB case + model card ---------- */
+const caseSelect = document.getElementById("caseSelect");
+const loadCaseBtn = document.getElementById("loadCase");
+const calibrateBtn = document.getElementById("calibrate");
+const caseInfo = document.getElementById("caseInfo");
+
+async function loadModelCard() {
+  try {
+    const d = await (await fetch("/api/model")).json();
+    const card = document.getElementById("modelCard");
+    if (d.available && d.meta && d.meta.unbiased) {
+      const u = d.meta.unbiased;
+      card.textContent = `Predictor: MAP-only logistic · trained on VitalDB · `
+        + `unbiased AUROC ${u.auroc} · PPV ${u.ppv}`;
+    } else {
+      card.textContent = "Predictor: not trained (mechanistic risk only).";
+    }
+  } catch (e) { /* ignore */ }
+}
+
+async function loadCases() {
+  try {
+    const d = await (await fetch("/api/cases")).json();
+    for (const c of d.cases) {
+      const o = document.createElement("option");
+      o.value = c.caseid;
+      o.textContent = c.baseline
+        ? `Case ${c.caseid} · base ${c.baseline} · dip ${c.dip_min}`
+        : `Case ${c.caseid}`;
+      caseSelect.appendChild(o);
+    }
+  } catch (e) { /* real-case mode unavailable (e.g. no cached data) */ }
+}
+
+caseSelect.addEventListener("change", () => {
+  loadCaseBtn.disabled = !caseSelect.value;
+});
+
+function setPatient(p) {
+  Object.assign(state, { age: p.age, weight: p.weight, height: p.height,
+    sex: p.sex, map0: p.map0, duration: 15 });
+  for (const k of ["age","weight","height","map0","duration"]) {
+    const el = document.getElementById(k); if (el) { el.value = state[k]; setOut(k); }
+  }
+  document.querySelectorAll("#sex button").forEach(x =>
+    x.classList.toggle("active", x.dataset.sex === state.sex));
+}
+
+loadCaseBtn.addEventListener("click", async () => {
+  const id = caseSelect.value; if (!id) return;
+  loadCaseBtn.textContent = "Loading…";
+  try {
+    realCase = await (await fetch(`/api/case/${id}`)).json();
+    setPatient(realCase.patient);
+    document.querySelector(".lg-real").hidden = false;
+    calibrateBtn.disabled = false;
+    const pp = realCase.peak_prob != null ? ` · measured IOH prob ${Math.round(realCase.peak_prob*100)}%` : "";
+    caseInfo.textContent = `Case ${realCase.caseid}: min MAP ${realCase.min_map} mmHg${pp}. `
+      + `White dotted = the patient's real measured MAP.`;
+    schedule(true);
+  } catch (e) { caseInfo.textContent = "Could not load case."; }
+  loadCaseBtn.textContent = "Load case";
+});
+
+calibrateBtn.addEventListener("click", async () => {
+  if (!realCase) return;
+  calibrateBtn.textContent = "Fitting…";
+  try {
+    const body = {
+      age: state.age, weight: state.weight, height: state.height, sex: state.sex,
+      map0: state.map0, duration_min: state.duration,
+      propofol: state.propofol, norepi: state.norepi, norepi_start_min: state.norepi_start,
+      observed_map: realCase.map_real,
+    };
+    const d = await (await fetch("/api/calibrate", {
+      method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(body),
+    })).json();
+    // apply fitted deltas -> personalized twin
+    persEl.checked = true; state.personalize = true;
+    persEl.dispatchEvent(new Event("change"));
+    for (const [id, val] of [["delta_ec50", d.delta_ec50], ["delta_ke0", d.delta_ke0]]) {
+      const el = document.getElementById(id); el.value = val; state[id] = val; setOut(id);
+    }
+    caseInfo.textContent = `Calibrated to case ${realCase.caseid}: `
+      + `δEC50 ${d.delta_ec50}, δke0 ${d.delta_ke0} (fit RMSE ${d.rmse} mmHg). `
+      + `Orange = personalized twin fitted to the measured MAP.`;
+    schedule(true);
+  } catch (e) { caseInfo.textContent = "Calibration failed."; }
+  calibrateBtn.textContent = "Calibrate twin ⟳";
+});
+
 /* boot */
 (async function boot() {
+  await Promise.all([loadModelCard(), loadCases()]);
   await fire();
   sweep();
 })();

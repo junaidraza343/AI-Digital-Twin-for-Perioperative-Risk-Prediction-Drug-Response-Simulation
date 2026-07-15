@@ -1,0 +1,21 @@
+{
+  "model": "map_only_logistic",
+  "features": [
+    "map_last",
+    "map_slope"
+  ],
+  "trained_on": "VitalDB windows.parquet",
+  "n_train": 25113,
+  "n_test_unbiased": 4584,
+  "alarm_rate": 0.1,
+  "alarm_threshold": 0.12528373435705914,
+  "unbiased": {
+    "auroc": 0.8381,
+    "auprc": 0.3403,
+    "ppv": 0.2838,
+    "ece": 0.0298,
+    "brier": 0.04,
+    "n": 4584.0,
+    "prevalence": 0.0467
+  }
+}

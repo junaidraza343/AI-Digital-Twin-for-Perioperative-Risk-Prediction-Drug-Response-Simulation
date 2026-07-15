@@ -1,0 +1,152 @@
+[
+  {
+    "caseid": 16,
+    "baseline": 85,
+    "dip_min": 45
+  },
+  {
+    "caseid": 2398,
+    "baseline": 74,
+    "dip_min": 45
+  },
+  {
+    "caseid": 3080,
+    "baseline": 78,
+    "dip_min": 45
+  },
+  {
+    "caseid": 3136,
+    "baseline": 72,
+    "dip_min": 45
+  },
+  {
+    "caseid": 5633,
+    "baseline": 77,
+    "dip_min": 45
+  },
+  {
+    "caseid": 348,
+    "baseline": 96,
+    "dip_min": 46
+  },
+  {
+    "caseid": 578,
+    "baseline": 103,
+    "dip_min": 46
+  },
+  {
+    "caseid": 4036,
+    "baseline": 75,
+    "dip_min": 46
+  },
+  {
+    "caseid": 4353,
+    "baseline": 74,
+    "dip_min": 46
+  },
+  {
+    "caseid": 2368,
+    "baseline": 86,
+    "dip_min": 47
+  },
+  {
+    "caseid": 3555,
+    "baseline": 93,
+    "dip_min": 47
+  },
+  {
+    "caseid": 1062,
+    "baseline": 90,
+    "dip_min": 49
+  },
+  {
+    "caseid": 1830,
+    "baseline": 85,
+    "dip_min": 49
+  },
+  {
+    "caseid": 4025,
+    "baseline": 72,
+    "dip_min": 49
+  },
+  {
+    "caseid": 4044,
+    "baseline": 79,
+    "dip_min": 49
+  },
+  {
+    "caseid": 222,
+    "baseline": 88,
+    "dip_min": 50
+  },
+  {
+    "caseid": 244,
+    "baseline": 73,
+    "dip_min": 50
+  },
+  {
+    "caseid": 721,
+    "baseline": 83,
+    "dip_min": 50
+  },
+  {
+    "caseid": 3328,
+    "baseline": 79,
+    "dip_min": 50
+  },
+  {
+    "caseid": 3682,
+    "baseline": 77,
+    "dip_min": 50
+  },
+  {
+    "caseid": 6351,
+    "baseline": 84,
+    "dip_min": 50
+  },
+  {
+    "caseid": 399,
+    "baseline": 87,
+    "dip_min": 51
+  },
+  {
+    "caseid": 1191,
+    "baseline": 74,
+    "dip_min": 51
+  },
+  {
+    "caseid": 3800,
+    "baseline": 75,
+    "dip_min": 51
+  },
+  {
+    "caseid": 4835,
+    "baseline": 80,
+    "dip_min": 51
+  },
+  {
+    "caseid": 5328,
+    "baseline": 77,
+    "dip_min": 51
+  },
+  {
+    "caseid": 1244,
+    "baseline": 94,
+    "dip_min": 52
+  },
+  {
+    "caseid": 2336,
+    "baseline": 75,
+    "dip_min": 52
+  },
+  {
+    "caseid": 4211,
+    "baseline": 84,
+    "dip_min": 52
+  },
+  {
+    "caseid": 5015,
+    "baseline": 95,
+    "dip_min": 52
+  }
+]

@@ -81,8 +81,20 @@
           <input type="range" id="delta_ke0" min="-0.7" max="0.7" step="0.05" value="0" disabled /></div>
       </section>
 
+      <section class="panel accent-real">
+        <div class="panel-head"><h2>Real patient · VitalDB</h2></div>
+        <p class="hint">Ground the twin against an actual case's measured MAP.</p>
+        <select id="caseSelect" class="select"><option value="">Select a case…</option></select>
+        <div class="real-btns">
+          <button id="loadCase" class="btn" disabled>Load case</button>
+          <button id="calibrate" class="btn btn-accent" disabled>Calibrate twin ⟳</button>
+        </div>
+        <p class="hint" id="caseInfo"></p>
+      </section>
+
       <section class="panel">
         <label class="check"><input type="checkbox" id="show_band" checked /><span>Show confidence band</span></label>
+        <p class="modelcard" id="modelCard"></p>
       </section>
     </aside>
 
@@ -101,6 +113,10 @@
           <span class="v-label">TIME &lt; 65</span>
           <span class="v-value" id="minsBelow">—<em>min</em></span>
         </div>
+        <div class="vital ml" id="mlTile">
+          <span class="v-label">ML IOH PROB</span>
+          <span class="v-value" id="iohProb">—<em>%</em></span>
+        </div>
         <div class="vital">
           <span class="v-label">PROPOFOL Ce</span>
           <span class="v-value" id="ceEnd">—<em>µg/mL</em></span>
@@ -112,6 +128,7 @@
         <div class="legend" id="legend">
           <span class="lg lg-pop">Population twin</span>
           <span class="lg lg-pers" hidden>Personalized twin</span>
+          <span class="lg lg-real" hidden>Measured MAP</span>
           <span class="lg lg-band">Confidence band</span>
           <span class="lg lg-thr">65 mmHg threshold</span>
         </div>
