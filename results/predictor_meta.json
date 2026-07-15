@@ -5,17 +5,17 @@
     "map_slope"
   ],
   "trained_on": "VitalDB windows.parquet",
-  "n_train": 25113,
-  "n_test_unbiased": 4584,
+  "n_train": 89663,
+  "n_test_unbiased": 14046,
   "alarm_rate": 0.1,
-  "alarm_threshold": 0.12528373435705914,
+  "alarm_threshold": 0.11750847079456796,
   "unbiased": {
-    "auroc": 0.8381,
-    "auprc": 0.3403,
-    "ppv": 0.2838,
-    "ece": 0.0298,
-    "brier": 0.04,
-    "n": 4584.0,
-    "prevalence": 0.0467
+    "auroc": 0.8494,
+    "auprc": 0.3167,
+    "ppv": 0.3302,
+    "ece": 0.0196,
+    "brier": 0.0485,
+    "n": 14046.0,
+    "prevalence": 0.0575
   }
 }
