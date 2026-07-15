@@ -1,0 +1,8 @@
+step,n_remaining
+start,6388
+age>=18,6331
+department,4998
+general_anesthesia,4701
+duration>=30min,4700
+asa_not_5_6,4699
+preop_map>=65 (skipped: no preop BP),4699

@@ -13,3 +13,7 @@ venv/
 
 # OS
 .DS_Store
+
+# Run logs & large derived data
+*.log
+results/eligible_cases.csv
