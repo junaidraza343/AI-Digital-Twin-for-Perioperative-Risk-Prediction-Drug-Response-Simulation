@@ -1,7 +1,8 @@
 services:
-  twin-dashboard:
+  twin:
     build: .
-    image: perioperative-twin-dashboard
+    image: perioperative-twin
+    container_name: perioperative-twin
     ports:
-      - "8501:8501"
+      - "8000:8000"
     restart: unless-stopped
