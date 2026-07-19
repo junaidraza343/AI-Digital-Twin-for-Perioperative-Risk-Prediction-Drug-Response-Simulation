@@ -3,28 +3,56 @@
 # predictor, data-driven calibration, and real VitalDB cases (bundled, offline).
 # Cross-platform: builds and runs on macOS, Linux, and Windows (Docker Desktop,
 # Linux containers). No shell scripts, JSON-array CMD, no host bind mounts.
+#
+# Ships the full stack: clinical monitor AND a live ML-Ops console (metrics,
+# curves, retrain, VitalDB dataset build), so the deployed demo is the same
+# application as the local one.
 FROM python:3.10-slim
 
 WORKDIR /app
+
+# lightgbm needs libgomp at runtime; without it `import lightgbm` raises and
+# GbdtModel silently degrades to the HistGradientBoosting fallback.
+RUN apt-get update && apt-get install -y --no-install-recommends libgomp1 \
+    && rm -rf /var/lib/apt/lists/*
 
 RUN pip install --no-cache-dir \
     "numpy>=1.24" \
     "pandas>=2.0" \
     "pyarrow>=14.0" \
     "scikit-learn>=1.3" \
+    "lightgbm>=4.0" \
     "joblib>=1.2" \
     "fastapi>=0.110" \
-    "uvicorn[standard]>=0.27"
+    "uvicorn[standard]>=0.27" \
+    "vitaldb>=1.4.0" \
+    "certifi"
 
-# App code.
+# App code. scripts/ is required: the retrain and dataset-build endpoints import
+# scripts.run_baseline / scripts.train_predictor and spawn scripts.run_all_subset.
 COPY twin/ ./twin/
 COPY api/ ./api/
 COPY frontend/ ./frontend/
+COPY scripts/ ./scripts/
 
-# Runtime artifacts: trained predictor + real-case data for offline grounding.
-COPY data_cache/ ./data_cache/
-COPY results/predictor_map_only.joblib results/predictor_meta.json \
-     results/demo_cases.json results/eligible_cases.csv ./results/
+# Runtime artifacts. windows.parquet + eligible_cases.csv drive the ML-Ops
+# console (status counts, ROC/PR/calibration curves, live retrain); the CSVs
+# back the selection-bias table and decision curve.
+COPY results/windows.parquet results/eligible_cases.csv \
+     results/predictor_map_only.joblib results/predictor_meta.json \
+     results/demo_cases.json results/selection_bias_results.csv \
+     results/deepnet_results.csv results/decision_curve.csv \
+     results/cohort_funnel.csv ./results/
+
+# Real VitalDB cases for offline grounding — only the 40 curated demo cases the
+# UI can actually select, not the full 113 MB dev cache.
+COPY deploy/demo_cache/ ./data_cache/
+
+# Hugging Face Spaces (and most free hosts) run the container as a non-root UID.
+# results/ and data_cache/ must stay writable: retrain rewrites the predictor and
+# the build job streams logs + downloaded cases into them.
+RUN useradd -m -u 1000 twin && chown -R twin:twin /app
+USER twin
 
 EXPOSE 8000
 

@@ -35,8 +35,22 @@ def test_curves_has_both_models():
 
 @pytest.mark.skipif(not _HAS_DATA, reason="no windows.parquet")
 def test_retrain_predictor():
-    d = client.post("/api/admin/train-predictor").json()
-    assert d["ok"] is True and len(d["rows"]) == 12  # 4 models x 3 regimes
+    """Retrain is a polled background job, so the POST only hands back a job id."""
+    import time
+    import api.admin as admin
+
+    job_id = client.post("/api/admin/train-predictor").json()["job_id"]
+    assert admin._JOBS[job_id]["kind"] == "train"
+
+    deadline = time.time() + 1800
+    while client.get(f"/api/admin/job/{job_id}").json()["status"] == "running":
+        assert time.time() < deadline, "retrain job did not finish in 30 min"
+        time.sleep(5)
+
+    d = client.get(f"/api/admin/job/{job_id}").json()
+    assert d["status"] == "done", d.get("error")
+    assert len(d["rows"]) == 12          # 4 models x 3 regimes
+    assert d["predictor_meta"]["unbiased"]["auroc"] > 0.5
 
 
 def test_build_job_lifecycle(monkeypatch):

@@ -108,10 +108,18 @@ def _train_both(unbiased_only=True):
     return models, make_unbiased(test), drop
 
 
+# Curves cost a full retrain of both models over every window (~9 s on 4 cores,
+# noticeably worse on a small cloud instance), and the result only changes when
+# the predictor is retrained. Cache it; /train-predictor clears it.
+_CURVES_CACHE: dict = {}
+
+
 @router.get("/curves")
 def curves():
     if not (c.RESULTS_DIR / "windows.parquet").exists():
         return {"available": False}
+    if "payload" in _CURVES_CACHE:
+        return _CURVES_CACHE["payload"]
     from sklearn.metrics import roc_curve, precision_recall_curve, roc_auc_score, average_precision_score
 
     models, unbiased, drop = _train_both()
@@ -150,27 +158,45 @@ def curves():
     dca = _read_csv("decision_curve.csv")
     if dca is not None:
         out["decision_curve"] = _records(dca)
+    _CURVES_CACHE["payload"] = out
     return out
 
 
-# ------------------------------------------------------------------ training (sync)
-@router.post("/train-predictor")
-def train_predictor_endpoint():
+# ------------------------------------------------------------------ training (async)
+def _run_train(job_id: str):
     """Retrain MAP-only + GBDT, regenerate the selection-bias table, persist predictor."""
-    if not (c.RESULTS_DIR / "windows.parquet").exists():
-        raise HTTPException(400, "No windows.parquet — build a dataset first.")
     from scripts.run_baseline import run
     from scripts.train_predictor import train
+    try:
+        windows = pd.read_parquet(c.RESULTS_DIR / "windows.parquet")
+        case_meta = pd.read_csv(c.RESULTS_DIR / "eligible_cases.csv")
+        table = run(windows, case_meta)      # both models, all regimes -> csv
+        meta = train()                       # persist MAP-only predictor + meta
+        _CURVES_CACHE.clear()                # curves now reflect a stale model
+        # refresh the in-process predictor used by the clinical UI
+        import api.main as main_mod
+        from twin.predict import load_predictor
+        main_mod.PREDICTOR, main_mod.PREDICTOR_META = load_predictor()
+        _JOBS[job_id].update(status="done", rows=_records(table), predictor_meta=meta)
+    except Exception as exc:                 # surface the reason in the console
+        _JOBS[job_id].update(status="failed", error=f"{type(exc).__name__}: {exc}")
+    _JOBS[job_id]["ended"] = time.time()
 
-    windows = pd.read_parquet(c.RESULTS_DIR / "windows.parquet")
-    case_meta = pd.read_csv(c.RESULTS_DIR / "eligible_cases.csv")
-    table = run(windows, case_meta)          # both models, all regimes -> csv
-    meta = train()                           # persist MAP-only predictor + meta
-    # refresh the in-process predictor used by the clinical UI
-    import api.main as main_mod
-    from twin.predict import load_predictor
-    main_mod.PREDICTOR, main_mod.PREDICTOR_META = load_predictor()
-    return {"ok": True, "rows": _records(table), "predictor_meta": meta}
+
+@router.post("/train-predictor")
+def train_predictor_endpoint():
+    """Kick off a retrain in the background and return a job id to poll.
+
+    A full retrain is ~8 min on 4 cores and longer on a small cloud instance —
+    well past the request timeout most hosting proxies enforce — so this cannot
+    be a synchronous POST if the deployed console is to work.
+    """
+    if not (c.RESULTS_DIR / "windows.parquet").exists():
+        raise HTTPException(400, "No windows.parquet — build a dataset first.")
+    job_id = uuid.uuid4().hex[:8]
+    _JOBS[job_id] = {"status": "running", "kind": "train", "started": time.time()}
+    threading.Thread(target=_run_train, args=(job_id,), daemon=True).start()
+    return {"job_id": job_id}
 
 
 @router.post("/rescan-cases")
@@ -198,6 +224,13 @@ def _run_build(n_cases: int, job_id: str, log_path: Path):
     _JOBS[job_id]["status"] = "done" if rc == 0 else "failed"
     _JOBS[job_id]["returncode"] = rc
     _JOBS[job_id]["ended"] = time.time()
+    if rc == 0:
+        # A successful build rewrites windows.parquet, so cached curves and the
+        # memoized case lists no longer describe the dataset on disk.
+        from twin.data.case_api import _all_cases, available_cases
+        _CURVES_CACHE.clear()
+        _all_cases.cache_clear()
+        available_cases.cache_clear()
 
 
 def subprocess_popen(n_cases, f, env):
@@ -226,8 +259,8 @@ def job(job_id: str):
     if not j:
         raise HTTPException(404, "unknown job")
     log = ""
-    lp = Path(j["log_path"])
-    if lp.exists():
+    lp = Path(j["log_path"]) if j.get("log_path") else None
+    if lp is not None and lp.exists():
         log = lp.read_text()[-4000:]
     # progress parse from the pipeline's "PROGRESS k/N" lines
     stage, percent = "starting", 0
@@ -240,10 +273,14 @@ def job(job_id: str):
         stage = f"building windows · {k}/{n} cases"
     if "Windows:" in log:
         stage, percent = "training + evaluating", 95
+    if j.get("kind") == "train":
+        # No subprocess log to parse; report an indeterminate but honest stage.
+        stage, percent = "training MAP-only + GBDT across regimes", 50
     if j["status"] == "done":
         stage, percent = "complete", 100
     if j["status"] == "failed":
         stage = "failed"
     return {"status": j["status"], "stage": stage, "percent": percent,
-            "n_cases": j.get("n_cases"),
+            "n_cases": j.get("n_cases"), "error": j.get("error"),
+            "rows": j.get("rows"), "predictor_meta": j.get("predictor_meta"),
             "elapsed": round(time.time() - j["started"], 1), "log": log}

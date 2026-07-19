@@ -1,3 +1,13 @@
+---
+title: Perioperative Digital Twin
+emoji: 🫀
+colorFrom: indigo
+colorTo: red
+sdk: docker
+app_port: 8000
+pinned: false
+---
+
 # AI Digital Twin for Perioperative Risk Prediction & Drug-Response Simulation
 
 A patient-specific **perioperative digital twin** that couples a data-driven
@@ -48,9 +58,48 @@ docker compose up --build
 ```
 
 Open **http://localhost:8000** (clinical monitor) and **/admin** (ML-Ops console).
-The image bundles the trained predictor + real-case data, so the demo runs
-**fully offline**. (Retraining/building from VitalDB inside the container needs
-network; that's primarily a local-dev workflow — see below.)
+The image bundles the trained predictor, the training-window matrix, and 40
+curated real VitalDB cases, so both consoles run **fully offline** — verified by
+running the container with `--network none`. Only the *dataset build* reaches out
+to VitalDB, since it downloads new cases.
+
+---
+
+## Live deployment (Hugging Face Spaces)
+
+The hosted demo is the same image, running the full stack — clinical monitor and
+a working ML-Ops console.
+
+**Why Spaces:** free without a credit card, and 16 GB RAM — `/api/admin/curves`
+holds 598 k × 64 windows in memory and retrains two models, which OOMs on a
+512 MB free tier. It also doesn't cold-sleep the way Render's free tier does
+(~50 s wake-up), so an evaluator's click lands on a live page.
+
+```bash
+git lfs install                       # windows.parquet (68 MB) is tracked via LFS
+pip install huggingface_hub && huggingface-cli login
+huggingface-cli repo create perioperative-twin --type space --space_sdk docker
+
+git remote add space https://huggingface.co/spaces/<user>/perioperative-twin
+git push space main
+```
+
+The Space reads its config from the YAML front-matter at the top of this file
+(`sdk: docker`, `app_port: 8000`). First build takes ~5 min.
+
+**Timings on the free 2-vCPU tier** (measured locally on 4 cores, so expect ~2×):
+
+| Action | Cost |
+|---|---|
+| Clinical monitor, `/api/simulate`, real-case load | instant |
+| `/admin` first load (trains both models for the curves) | ~10 s, then cached |
+| **Retrain** (4 models × 3 regimes over 598 k windows) | **~8 min → ~20 min hosted** |
+| Dataset build | minutes; scales with case count |
+
+Retrain and build run as **polled background jobs**, not long requests — a
+synchronous retrain would exceed the gateway timeout of every hosting proxy.
+Start a retrain *before* the demo rather than clicking it live; the console shows
+elapsed time while it runs and refreshes the tables when it lands.
 
 ---
 

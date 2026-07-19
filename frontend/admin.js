@@ -164,16 +164,35 @@ function startProgress(stage) {
   };
 }
 
+// A full retrain runs for many minutes, so it is a polled background job rather
+// than one long request that a hosting proxy would time out.
 document.getElementById("btnRetrain").addEventListener("click", async (e) => {
   e.target.disabled = true; trainMsg.textContent = "";
   const done = startProgress("training MAP-only + GBDT…");
+  let job_id;
   try {
-    const d = await (await fetch("/api/admin/train-predictor", { method: "POST" })).json();
-    const u = d.predictor_meta?.unbiased;
-    trainMsg.textContent = u ? `Done. Predictor unbiased AUROC ${u.auroc}, PPV ${u.ppv}.` : "Done.";
-    done(); await refreshAll();
-  } catch (err) { done(); trainMsg.textContent = "Training failed."; }
-  e.target.disabled = false;
+    ({ job_id } = await (await fetch("/api/admin/train-predictor", { method: "POST" })).json());
+  } catch (err) { done(); trainMsg.textContent = "Could not start training."; e.target.disabled = false; return; }
+
+  const tick = async () => {
+    let j;
+    try { j = await (await fetch(`/api/admin/job/${job_id}`)).json(); }
+    catch { return setTimeout(tick, 3000); }
+    if (j.status === "running") {
+      trainMsg.textContent = `Training… ${Math.round(j.elapsed)}s elapsed (takes several minutes).`;
+      return setTimeout(tick, 3000);
+    }
+    done();
+    if (j.status === "done") {
+      const u = j.predictor_meta?.unbiased;
+      trainMsg.textContent = u ? `Done. Predictor unbiased AUROC ${u.auroc}, PPV ${u.ppv}.` : "Done.";
+      await refreshAll();
+    } else {
+      trainMsg.textContent = `Training failed. ${j.error || ""}`;
+    }
+    e.target.disabled = false;
+  };
+  tick();
 });
 
 document.getElementById("btnRescan").addEventListener("click", async (e) => {
