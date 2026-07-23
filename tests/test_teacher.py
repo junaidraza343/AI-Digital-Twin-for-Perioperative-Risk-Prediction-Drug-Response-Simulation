@@ -39,12 +39,31 @@ def test_teacher_reconstructs_and_improves_over_population():
     base_mse = float(((te.project_map_torch([patient], prop, norepi, zero) - observed) ** 2).mean())
 
     fitted, loss = fit_deltas_batch([patient], prop, norepi, observed,
-                                    n_iters=200, lr=0.05, prior_lambda=1e-3)
+                                    n_iters=100, lr=0.05, prior_lambda=1e-3)
     fit_mse = float(((te.project_map_torch([patient], prop, norepi, fitted) - observed) ** 2).mean())
 
     assert fit_mse < 1.0                 # reconstructs to well under 1 mmHg RMSE
     assert fit_mse < 0.1 * base_mse      # and is a large improvement over population
-    assert loss == pytest.approx(fit_mse, abs=0.05)  # returned loss is the recon MSE
+    assert loss == pytest.approx(fit_mse, abs=1e-6)  # returned loss = recon at final deltas
+
+
+def test_masked_observed_ignores_nan_samples():
+    """NaN samples in observed_map are masked out: the fit still reconstructs the
+    valid portion and never leaks NaN into the returned deltas or loss."""
+    patient, prop, norepi = _case()
+    true_delta = torch.zeros(1, 6, dtype=torch.float64)
+    true_delta[0, 4] = 0.4
+    observed = te.project_map_torch([patient], prop, norepi, true_delta).detach().clone()
+    observed[0, 150:] = float("nan")   # second half unmeasured
+
+    fitted, loss = fit_deltas_batch([patient], prop, norepi, observed,
+                                    n_iters=100, lr=0.05, prior_lambda=1e-3)
+    assert not torch.isnan(fitted).any()
+    assert loss == loss and loss < 1.0             # loss is finite (not NaN) and small
+    # reconstruction is scored only on the observed (non-NaN) portion
+    pred = te.project_map_torch([patient], prop, norepi, fitted).detach()
+    valid_mse = float(((pred[0, :150] - observed[0, :150]) ** 2).mean())
+    assert valid_mse < 1.0
 
 
 def test_prior_keeps_deltas_small_when_no_personalization_needed():

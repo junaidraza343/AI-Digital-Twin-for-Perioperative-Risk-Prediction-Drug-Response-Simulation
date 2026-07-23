@@ -1135,6 +1135,13 @@ git commit -m "feat(sp4): personalization evaluation (RMSE, identifiability, wha
 
 Drives the full (non-smoke) Stage 1 + Stage 2 runs on a free GPU, pulling cases from VitalDB in-session. Notebooks aren't unit-tested; the guard is that the underlying script runs on CPU (verified in Tasks 5–6) and the notebook only orchestrates it.
 
+> **Deferred optimization (from Task 3 review):** in `torch_engine.project_map_torch`
+> the norepinephrine rise does not depend on the deltas, yet it is recomputed on every
+> teacher/fine-tune iteration. Before the full-cohort Stage-1 target-generation pass,
+> split the engine (or let it accept a precomputed `rise`) so the norepi recurrence is
+> computed once per case and reused across iterations — a meaningful wall-clock win at
+> scale. Keep the delta=0 numpy-parity gate green when doing so.
+
 **Files:**
 - Create: `notebooks/train_calibration_gpu.ipynb`
 
