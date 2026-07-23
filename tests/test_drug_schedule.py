@@ -24,9 +24,10 @@ def test_propofol_nan_becomes_zero():
     assert np.allclose(out, [0.0, 20.0, 0.0, 0.0])
 
 
-def test_vasopressor_sums_phen_and_nepi_in_ug_min():
-    # 60 mL/h PHEN @100 ug/mL = 100 ug/min ; 60 mL/h NEPI @20 = 20 ug/min ; sum=120
+def test_vasopressor_norepi_equivalent_scales_phenylephrine():
+    # 60 mL/h PHEN @100 ug/mL = 100 ug/min * 0.1 potency = 10 ug/min norepi-equiv
+    # 60 mL/h NEPI @20 ug/mL = 20 ug/min ; sum = 30
     f = _frame(n=3, **{c.PHENYLEPHRINE_TRACK: np.full(3, 60.0),
                        c.NOREPI_TRACK: np.full(3, 60.0)})
     out = vasopressor_ug_min(f)
-    assert np.allclose(out, 120.0)
+    assert np.allclose(out, 30.0)

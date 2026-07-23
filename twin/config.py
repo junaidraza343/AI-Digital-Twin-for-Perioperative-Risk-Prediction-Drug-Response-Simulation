@@ -38,6 +38,10 @@ PPF20_MG_PER_ML = 20.0
 PHEN_UG_PER_ML = 100.0
 NEPI_UG_PER_ML = 20.0
 
+# Phenylephrine potency relative to norepinephrine (~1/10 per ug; documented
+# approximation for the norepinephrine-equivalent pressor input to the twin).
+PHEN_POTENCY_VS_NEPI = 0.1
+
 # SP4 cohort selection thresholds
 SP4_MIN_PROPOFOL_MINUTES = 5.0    # >=5 min of nonzero propofol infusion
 SP4_MIN_ART_FRACTION = 0.5        # >=50% of samples have continuous ART_MBP

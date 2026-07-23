@@ -22,6 +22,11 @@ def propofol_mg_min(frame: pd.DataFrame) -> np.ndarray:
 
 
 def vasopressor_ug_min(frame: pd.DataFrame) -> np.ndarray:
+    """Combined norepinephrine-equivalent pressor rate (ug/min).
+
+    Phenylephrine is scaled by its ~1/10 potency vs norepinephrine so the sum
+    is a norepinephrine-equivalent input to the PK-PD twin. Documented approx.
+    """
     phen = _ml_per_hour_to_per_min(frame, c.PHENYLEPHRINE_TRACK) * c.PHEN_UG_PER_ML
     nepi = _ml_per_hour_to_per_min(frame, c.NOREPI_TRACK) * c.NEPI_UG_PER_ML
-    return phen + nepi
+    return c.PHEN_POTENCY_VS_NEPI * phen + nepi
