@@ -11,6 +11,10 @@ from twin.pkpd.schedule import rate_vector
 
 
 def per_patient_map_rmse(patient_batch, prop_rate, norepi_rate, observed_map, deltas):
+    """Masked RMSE (mmHg) of projected vs observed MAP, one value per patient.
+
+    .cpu() before .numpy() so this works when training/eval ran on CUDA (Task 8).
+    """
     pred = te.project_map_torch(patient_batch, prop_rate, norepi_rate,
                                 deltas.to(prop_rate.dtype))
     obs = observed_map.to(pred.dtype)
@@ -19,12 +23,12 @@ def per_patient_map_rmse(patient_batch, prop_rate, norepi_rate, observed_map, de
     m = min(pred.shape[1], obs.shape[1])
     err = (pred[:, :m] - obs[:, :m]) * mask[:, :m]
     mse = (err ** 2).sum(dim=1) / mask[:, :m].sum(dim=1).clamp(min=1.0)
-    return torch.sqrt(mse).detach().numpy()
+    return torch.sqrt(mse).detach().cpu().numpy()
 
 
 def delta_identifiability(deltas):
     """Std of each delta across the cohort; large => data moves that delta."""
-    return deltas.detach().float().std(dim=0).numpy()
+    return deltas.detach().float().cpu().std(dim=0).numpy()
 
 
 def whatif_monotonic(patient, T=300):
