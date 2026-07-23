@@ -24,6 +24,7 @@ class FeaturePrep:
         self.columns = [c for c in df.columns if df[c].dtype != object]
         A = df[self.columns].to_numpy(dtype=float)
         self.med = np.nanmedian(A, axis=0)
+        self.med = np.nan_to_num(self.med, nan=0.0)  # all-NaN column -> impute 0
         A = self._impute(A)
         self.mu = A.mean(axis=0); self.sd = A.std(axis=0) + 1e-6
         return self
