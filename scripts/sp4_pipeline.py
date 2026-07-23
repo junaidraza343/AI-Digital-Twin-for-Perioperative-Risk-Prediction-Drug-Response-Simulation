@@ -78,10 +78,14 @@ def run_stage1_cohort(cohort, loader_fn=_default_loader, *, teacher_iters=200,
     device = device or pick_device()
     frames, targets = [], []
     for caseid, static_row in cohort:
-        case = load_case(caseid, static_row, loader_fn=loader_fn, device=device)
-        if case is None:
+        try:  # one bad case (missing track, pull failure) must not abort the run
+            case = load_case(caseid, static_row, loader_fn=loader_fn, device=device)
+            if case is None:
+                continue
+            d = teacher_delta(case, n_iters=teacher_iters).cpu().numpy()   # [1,6]
+        except Exception as exc:
+            print(f"  skip case {caseid}: {exc}")
             continue
-        d = teacher_delta(case, n_iters=teacher_iters).cpu().numpy()   # [1,6]
         w = case["windows"]
         frames.append(w)
         targets.append(np.repeat(d, len(w), axis=0))
@@ -142,15 +146,21 @@ def run_stage2_cohort(cohort, model, prep, cols, loader_fn=_default_loader, *,
                       device=None, save_path=None):
     """Stage 2: end-to-end fine-tune from a Stage-1 model. Returns (model, info)
     with info: n_cases, recon_first, recon_last (mean per-case recon MSE per epoch)."""
-    device = device or pick_device()
+    # Follow the model's own device so Stage 2 never mismatches a Stage-1 model
+    # that was trained on a different (explicitly overridden) device.
+    device = device or next(model.parameters()).device
     prepared = []
     for caseid, static_row in cohort:
-        case = load_case(caseid, static_row, loader_fn=loader_fn, device=device)
-        if case is None:
+        try:  # skip-and-log, same fault tolerance as Stage 1
+            case = load_case(caseid, static_row, loader_fn=loader_fn, device=device)
+            if case is None:
+                continue
+            w = case["windows"]
+            x = torch.tensor(prep.transform(w[cols]), dtype=torch.float32, device=device)
+            y = torch.tensor(w["y"].to_numpy(dtype=float), dtype=torch.float32, device=device)
+        except Exception as exc:
+            print(f"  skip case {caseid}: {exc}")
             continue
-        w = case["windows"]
-        x = torch.tensor(prep.transform(w[cols]), dtype=torch.float32, device=device)
-        y = torch.tensor(w["y"].to_numpy(dtype=float), dtype=torch.float32, device=device)
         prepared.append((case, x, y))
     if not prepared:
         raise ValueError("No case in the cohort produced any prediction windows.")
@@ -168,5 +178,8 @@ def run_stage2_cohort(cohort, model, prep, cols, loader_fn=_default_loader, *,
         recon_last = recon_mean
     info = {"n_cases": len(prepared), "recon_first": recon_first, "recon_last": recon_last}
     if save_path:
-        torch.save({"state": model.state_dict(), "cols": cols}, save_path)
+        # include prep so a Stage-2 checkpoint is self-contained (can preprocess features)
+        torch.save({"state": model.state_dict(), "cols": cols,
+                    "prep": {"columns": prep.columns, "med": prep.med,
+                             "mu": prep.mu, "sd": prep.sd}}, save_path)
     return model, info
