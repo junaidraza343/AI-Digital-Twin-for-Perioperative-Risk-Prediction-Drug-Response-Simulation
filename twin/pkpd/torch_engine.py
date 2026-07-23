@@ -11,8 +11,7 @@ import torch
 import twin.config as c
 from twin.pkpd.params import POP_PROPOFOL, POP_PD, POP_NOREPI
 from twin.pkpd.covariates import scale_propofol
-
-MAP_MIN, MAP_MAX = 20.0, 200.0
+from twin.pkpd.pd_model import MAP_MIN, MAP_MAX
 
 
 def _patient_propofol_params(patient_batch, dtype, device):
@@ -33,14 +32,20 @@ def project_map_torch(patient_batch, prop_rate, norepi_rate, deltas, dt=1.0):
     base = _patient_propofol_params(patient_batch, dtype, device)
 
     # Apply multiplicative deltas (exp) to propofol PK + PD params.
-    V1 = base["V1"] * torch.exp(d[:, 0]); V2 = base["V2"] * torch.exp(d[:, 1])
-    V3 = base["V3"] * torch.exp(d[:, 2]); ke0 = base["ke0"] * torch.exp(d[:, 3])
+    V1 = base["V1"] * torch.exp(d[:, 0])
+    V2 = base["V2"] * torch.exp(d[:, 1])
+    V3 = base["V3"] * torch.exp(d[:, 2])
+    ke0 = base["ke0"] * torch.exp(d[:, 3])
     CL, Q2, Q3 = base["CL"], base["Q2"], base["Q3"]
     ec50 = torch.tensor(POP_PD.ec50, dtype=dtype, device=device) * torch.exp(d[:, 4])
     gamma = torch.tensor(POP_PD.gamma, dtype=dtype, device=device) * torch.exp(d[:, 5])
     emax = torch.tensor(POP_PD.emax, dtype=dtype, device=device)
 
-    k10 = CL / V1; k12 = Q2 / V1; k21 = Q2 / V2; k13 = Q3 / V1; k31 = Q3 / V3
+    k10 = CL / V1
+    k12 = Q2 / V1
+    k21 = Q2 / V2
+    k13 = Q3 / V1
+    k31 = Q3 / V3
     step = dt / 60.0
 
     a1 = torch.zeros(B, dtype=dtype, device=device)
@@ -53,7 +58,9 @@ def project_map_torch(patient_batch, prop_rate, norepi_rate, deltas, dt=1.0):
         da1 = (-(k10 + k12 + k13) * a1 + k21 * a2 + k31 * a3) * step + infusion
         da2 = (k12 * a1 - k21 * a2) * step
         da3 = (k13 * a1 - k31 * a3) * step
-        a1 = a1 + da1; a2 = a2 + da2; a3 = a3 + da3
+        a1 = a1 + da1
+        a2 = a2 + da2
+        a3 = a3 + da3
         cp = a1 / V1
         ce_prev = ce_prev + ke0 * step * (cp - ce_prev)
         ce_list.append(ce_prev)
