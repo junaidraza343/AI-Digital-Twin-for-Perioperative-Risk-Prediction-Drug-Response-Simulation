@@ -16,17 +16,20 @@ WORKDIR /app
 RUN apt-get update && apt-get install -y --no-install-recommends libgomp1 \
     && rm -rf /var/lib/apt/lists/*
 
+# Pinned: an unpinned image silently changes model behaviour between builds,
+# so a deployment could stop reproducing the numbers reported in the write-up.
+# These match the versions the results were generated with.
 RUN pip install --no-cache-dir \
-    "numpy>=1.24" \
-    "pandas>=2.0" \
-    "pyarrow>=14.0" \
-    "scikit-learn>=1.3" \
-    "lightgbm>=4.0" \
-    "joblib>=1.2" \
-    "fastapi>=0.110" \
-    "uvicorn[standard]>=0.27" \
-    "vitaldb>=1.4.0" \
-    "certifi"
+    "numpy==1.26.4" \
+    "pandas==2.3.1" \
+    "pyarrow==19.0.1" \
+    "scikit-learn==1.7.2" \
+    "lightgbm==4.5.0" \
+    "joblib==1.2.0" \
+    "fastapi==0.115.6" \
+    "uvicorn[standard]==0.51.0" \
+    "vitaldb==1.7.2" \
+    "certifi==2026.2.25"
 
 # App code. scripts/ is required: the retrain and dataset-build endpoints import
 # scripts.run_baseline / scripts.train_predictor and spawn scripts.run_all_subset.
@@ -53,6 +56,11 @@ COPY deploy/demo_cache/ ./data_cache/
 # the build job streams logs + downloaded cases into them.
 RUN useradd -m -u 1000 twin && chown -R twin:twin /app
 USER twin
+
+# Admin controls (retrain, dataset build) spawn compute and are DISABLED unless
+# ADMIN_TOKEN is set; callers must then send it as X-Admin-Token. Left unset here
+# on purpose so a default deployment is read-only.
+ENV ADMIN_TOKEN=""
 
 EXPOSE 8000
 

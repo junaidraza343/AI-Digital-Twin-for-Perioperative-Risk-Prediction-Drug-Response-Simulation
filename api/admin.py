@@ -5,6 +5,7 @@ Primarily a local developer console (training that touches VitalDB needs network
 """
 import os
 import re
+import secrets
 import sys
 import threading
 import time
@@ -13,7 +14,7 @@ from pathlib import Path
 
 import numpy as np
 import pandas as pd
-from fastapi import APIRouter, HTTPException
+from fastapi import APIRouter, Depends, Header, HTTPException, Query
 
 import twin.config as c
 
@@ -22,6 +23,29 @@ REPO = c.REPO_ROOT
 
 # In-memory job registry for background training runs.
 _JOBS: dict[str, dict] = {}
+
+
+# ------------------------------------------------------------------ auth
+ADMIN_TOKEN_ENV = "ADMIN_TOKEN"
+MAX_BUILD_CASES = 2000
+
+
+def require_admin(x_admin_token: str | None = Header(default=None)):
+    """Gate every endpoint that spawns work.
+
+    These endpoints start training threads and a VitalDB subprocess, so on a
+    public deployment an unauthenticated caller could exhaust the host's CPU and
+    network. Fails CLOSED: with no ADMIN_TOKEN configured the controls are
+    disabled outright rather than left open, so shipping without setting the
+    variable cannot silently expose them.
+    """
+    expected = os.environ.get(ADMIN_TOKEN_ENV)
+    if not expected:
+        raise HTTPException(503, "Admin controls are disabled: ADMIN_TOKEN is not "
+                                 "configured on this deployment.")
+    if not x_admin_token or not secrets.compare_digest(x_admin_token, expected):
+        raise HTTPException(401, "Invalid or missing X-Admin-Token.")
+    return True
 
 
 # ------------------------------------------------------------------ helpers
@@ -184,7 +208,7 @@ def _run_train(job_id: str):
 
 
 @router.post("/train-predictor")
-def train_predictor_endpoint():
+def train_predictor_endpoint(_: bool = Depends(require_admin)):
     """Kick off a retrain in the background and return a job id to poll.
 
     A full retrain is ~8 min on 4 cores and longer on a small cloud instance —
@@ -200,7 +224,7 @@ def train_predictor_endpoint():
 
 
 @router.post("/rescan-cases")
-def rescan_cases():
+def rescan_cases(_: bool = Depends(require_admin)):
     from twin.data.case_api import scan_demo_cases
     cat = scan_demo_cases()
     return {"ok": True, "n": len(cat)}
@@ -242,8 +266,8 @@ def subprocess_popen(n_cases, f, env):
 
 
 @router.post("/build")
-def build(n_cases: int = 100):
-    n_cases = max(5, min(int(n_cases), 2000))
+def build(n_cases: int = Query(100, ge=5, le=MAX_BUILD_CASES),
+          _: bool = Depends(require_admin)):
     job_id = uuid.uuid4().hex[:8]
     log_path = c.RESULTS_DIR / f"build_{job_id}.log"
     c.RESULTS_DIR.mkdir(parents=True, exist_ok=True)
