@@ -71,18 +71,24 @@ def project_map_torch(patient_batch, prop_rate, norepi_rate, deltas, dt=1.0):
     reduction = emax * ce_g / (ec50[:, None] ** gamma[:, None] + ce_g)
 
     # Norepinephrine rise (two-stage cascade), population params (no delta).
-    k = 1.0 / POP_NOREPI.tpeak_s
-    plasma = torch.zeros(B, dtype=dtype, device=device)
-    effect = torch.zeros(B, dtype=dtype, device=device)
-    conc_list = []
-    for i in range(T):
-        inp = norepi_rate[:, i] / 60.0
-        plasma = plasma + dt * (inp - k * plasma)
-        effect = effect + dt * k * (plasma - effect)
-        conc_list.append(effect)
-    conc = torch.stack(conc_list, dim=1)
-    conc_g = torch.clamp(conc, min=0.0) ** POP_NOREPI.gamma
-    rise = POP_NOREPI.dmap_max * conc_g / (POP_NOREPI.ec50 ** POP_NOREPI.gamma + conc_g)
+    # Only ~3% of the SP4 cohort receives a vasopressor at all, and this cascade
+    # does not depend on the deltas being optimized, so integrating T steps of
+    # zeros on every iteration is pure cost. An unperfused case contributes no rise.
+    if torch.any(norepi_rate != 0):
+        k = 1.0 / POP_NOREPI.tpeak_s
+        plasma = torch.zeros(B, dtype=dtype, device=device)
+        effect = torch.zeros(B, dtype=dtype, device=device)
+        conc_list = []
+        for i in range(T):
+            inp = norepi_rate[:, i] / 60.0
+            plasma = plasma + dt * (inp - k * plasma)
+            effect = effect + dt * k * (plasma - effect)
+            conc_list.append(effect)
+        conc = torch.stack(conc_list, dim=1)
+        conc_g = torch.clamp(conc, min=0.0) ** POP_NOREPI.gamma
+        rise = POP_NOREPI.dmap_max * conc_g / (POP_NOREPI.ec50 ** POP_NOREPI.gamma + conc_g)
+    else:
+        rise = torch.zeros(B, T, dtype=dtype, device=device)
 
     map0 = torch.tensor([p.map0 for p in patient_batch], dtype=dtype, device=device)
     traj = map0[:, None] * (1.0 - reduction) + map0[:, None] * rise

@@ -87,3 +87,21 @@ def test_minutes_below_threshold_counts_seconds():
     traj = torch.tensor([[70.0, 60.0, 60.0, 80.0]], dtype=torch.float64)  # 2 s < 65
     out = te.minutes_below_threshold(traj, dt=1.0, thresh=65.0)
     assert np.allclose(out.numpy(), [2.0 / 60.0])
+
+
+def test_norepi_rise_still_applied_when_infusion_is_present():
+    """Guard for the all-zero norepi fast path: a real infusion must still raise MAP.
+
+    Most SP4 cases carry no vasopressor, so the cascade is skipped when the input
+    is identically zero. That shortcut must not suppress a genuine pressor effect.
+    """
+    pats = [Patient(age=50, weight=70, height=170, sex="M", map0=80.0)]
+    T = 600
+    prop = torch.zeros(1, T, dtype=torch.float64)
+    zero = torch.zeros(1, T, dtype=torch.float64)
+    dosed = torch.full((1, T), 10.0, dtype=torch.float64)
+    d = torch.zeros(1, 6, dtype=torch.float64)
+
+    without = te.project_map_torch(pats, prop, zero, d)
+    with_pressor = te.project_map_torch(pats, prop, dosed, d)
+    assert with_pressor[0, -1] > without[0, -1] + 1.0

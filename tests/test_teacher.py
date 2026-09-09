@@ -75,3 +75,50 @@ def test_prior_keeps_deltas_small_when_no_personalization_needed():
     fitted, _ = fit_deltas_batch([patient], prop, norepi, observed,
                                  n_iters=100, lr=0.05, prior_lambda=1e-2)
     assert float(fitted.abs().max()) < 0.1
+
+
+def _ragged_case(T, prop_level, map0, seed):
+    """One synthetic case of length T with its own propofol level and baseline."""
+    g = torch.Generator().manual_seed(seed)
+    patient = Patient(age=50, weight=70, height=170, sex="M", map0=map0)
+    prop = torch.full((1, T), float(prop_level), dtype=torch.float64)
+    nore = torch.zeros((1, T), dtype=torch.float64)
+    true_d = torch.zeros(1, 6, dtype=torch.float64)
+    true_d[0, 4] = 0.3   # perturb EC50 so there is something to recover
+    obs = te.project_map_torch([patient], prop, nore, true_d)
+    obs = obs + 0.5 * torch.randn(obs.shape, generator=g, dtype=torch.float64)
+    return {"patient": patient, "prop": prop, "norepi": nore, "observed": obs}
+
+
+def test_cohort_fit_matches_per_case_fit_on_ragged_lengths():
+    """Padding shorter cases into one batch must not change their fitted deltas.
+
+    Cases have different durations, so a cohort fit has to pad and mask. If the
+    padding leaked into the loss, the batched deltas would drift from the
+    per-case ones.
+    """
+    from twin.pkpd.teacher import fit_deltas_cohort
+
+    cases = [_ragged_case(400, 40.0, 92.0, 0),
+             _ragged_case(900, 70.0, 85.0, 1),
+             _ragged_case(650, 55.0, 88.0, 2)]
+
+    solo = torch.cat([fit_deltas_batch([c["patient"]], c["prop"], c["norepi"],
+                                       c["observed"], n_iters=120)[0]
+                      for c in cases], dim=0)
+    batched, _ = fit_deltas_cohort(cases, n_iters=120)
+
+    assert batched.shape == (3, 6)
+    assert torch.allclose(batched, solo, atol=5e-3), (batched - solo).abs().max()
+
+
+def test_cohort_fit_respects_batch_size_chunking():
+    """Chunking the cohort must not change the result for any case."""
+    from twin.pkpd.teacher import fit_deltas_cohort
+
+    cases = [_ragged_case(300, 40.0, 92.0, 3),
+             _ragged_case(500, 60.0, 86.0, 4),
+             _ragged_case(400, 50.0, 90.0, 5)]
+    one_go, _ = fit_deltas_cohort(cases, n_iters=100, batch_size=8)
+    chunked, _ = fit_deltas_cohort(cases, n_iters=100, batch_size=2)
+    assert torch.allclose(one_go, chunked, atol=5e-3)

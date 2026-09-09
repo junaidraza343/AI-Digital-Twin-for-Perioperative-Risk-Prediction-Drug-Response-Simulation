@@ -42,9 +42,18 @@ NEPI_UG_PER_ML = 20.0
 # approximation for the norepinephrine-equivalent pressor input to the twin).
 PHEN_POTENCY_VS_NEPI = 0.1
 
+# Physiologic bounds for an arterial MAP sample; outside this is line artifact
+# (flush, transducer zeroing, damping) rather than a real pressure.
+MAP_ARTIFACT_LO, MAP_ARTIFACT_HI = 40.0, 200.0
+
 # SP4 cohort selection thresholds
 SP4_MIN_PROPOFOL_MINUTES = 5.0    # >=5 min of nonzero propofol infusion
-SP4_MIN_ART_FRACTION = 0.5        # >=50% of samples have continuous ART_MBP
+SP4_MIN_ART_FRACTION = 0.5        # >=50% of the record covered by continuous ART
+# Solar8000 writes ART_MBP every 2s, so on the 1 Hz grid raw non-NaN coverage
+# can never exceed 0.50 and real cases land just under it. Bridge gaps up to
+# this many seconds before measuring coverage, so the gate tests *continuity*
+# rather than the recorder's sample rate.
+SP4_ART_FFILL_LIMIT_S = 4
 
 NUMERIC_TRACKS = NUMERIC_TRACKS + DRUG_TRACKS
 
