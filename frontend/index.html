@@ -4,21 +4,20 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Perioperative Digital Twin — MAP Monitor</title>
-  <link rel="icon" href="data:," />
+  <meta name="description" content="Patient-specific perioperative digital twin: mechanistic PK/PD mean-arterial-pressure simulation with an intraoperative-hypotension predictor." />
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Ccircle cx='16' cy='16' r='13' fill='none' stroke='%235fe3c0' stroke-width='2'/%3E%3Ccircle cx='16' cy='16' r='4' fill='%235fe3c0'/%3E%3C/svg%3E" />
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-  <link href="https://fonts.googleapis.com/css2?family=Chakra+Petch:wght@500;600;700&family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Sans:wght@400;500;600;700&display=swap" rel="stylesheet" />
   <link rel="stylesheet" href="/styles.css" />
 </head>
-<body class="soft">
-  <div class="scanlines" aria-hidden="true"></div>
+<body>
 
   <header class="topbar">
     <div class="brand">
-      <span class="led" id="statusLed"></span>
+      <span class="led" id="statusLed" aria-hidden="true"></span>
       <div class="brand-text">
-        <h1 class="soft-h1">Perioperative Digital Twin</h1>
-        <p>Mechanistic PK/PD MAP simulator · Eleveld propofol · Joachim norepinephrine</p>
+        <h1>Perioperative Digital&nbsp;Twin</h1>
+        <p>Mechanistic PK/PD mean arterial pressure · Eleveld propofol · Joachim norepinephrine</p>
       </div>
     </div>
     <div class="brand-meta">
@@ -31,38 +30,43 @@
   </header>
 
   <main class="console">
-    <!-- VITALS -->
-    <section class="vitals">
+
+    <!-- ------------------------------------------------------ vitals rail -->
+    <section class="vitals" aria-label="Current projection summary">
       <div class="vital risk" id="riskTile">
-        <span class="v-label">IOH RISK</span>
+        <span class="v-label">IOH risk</span>
         <span class="v-value" id="riskValue">—</span>
         <div class="risk-bar"><div class="risk-fill" id="riskFill"></div></div>
       </div>
       <div class="vital">
-        <span class="v-label">MIN MAP</span>
+        <span class="v-label">Minimum MAP</span>
         <span class="v-value" id="minMap">—<em>mmHg</em></span>
       </div>
       <div class="vital">
-        <span class="v-label">TIME &lt; 65</span>
+        <span class="v-label">Time below 65</span>
         <span class="v-value" id="minsBelow">—<em>min</em></span>
       </div>
       <div class="vital ml">
-        <span class="v-label">ML IOH PROB</span>
+        <span class="v-label">ML IOH probability</span>
         <span class="v-value" id="iohProb">—<em>%</em></span>
       </div>
       <div class="vital ce">
-        <span class="v-label">PROPOFOL Ce</span>
+        <span class="v-label">Propofol C<sub>e</sub></span>
         <span class="v-value" id="ceEnd">—<em>µg/mL</em></span>
       </div>
     </section>
 
     <div class="workspace">
-      <!-- LEFT: charts + bottom row -->
+
+      <!-- ------------------------------------------------------- charts -->
       <div class="col-charts">
+
         <section class="card chart-card">
           <div class="card-head">
-            <div><h2 class="soft-title">Mean arterial pressure</h2>
-              <p class="soft-sub">Population twin vs personalized · 65 mmHg threshold</p></div>
+            <div>
+              <h2 class="soft-title">Mean arterial pressure</h2>
+              <p class="soft-sub">Population twin against the personalized twin, with the 65 mmHg hypotension threshold</p>
+            </div>
             <div class="legend" id="legend">
               <span class="lg lg-pop">Population</span>
               <span class="lg lg-pers" hidden>Personalized</span>
@@ -75,50 +79,69 @@
 
         <section class="card chart-card">
           <div class="card-head">
-            <div><h2 class="soft-title">Effect-site concentration · Ce</h2>
-              <p class="soft-sub">Propofol accumulation over horizon</p></div>
+            <div>
+              <h2 class="soft-title">Effect-site concentration</h2>
+              <p class="soft-sub">Propofol accumulation at the effect compartment over the horizon</p>
+            </div>
             <span class="chip">µg/mL</span>
           </div>
           <canvas id="ceChart"></canvas>
         </section>
 
         <div class="bottom-row">
+
           <section class="card">
             <div class="card-head">
               <h2 class="soft-title sm">Personalization</h2>
-              <label class="switch"><input type="checkbox" id="personalize" /><span></span></label>
+              <label class="switch" title="Enable personalized deltas">
+                <input type="checkbox" id="personalize" /><span></span>
+              </label>
             </div>
-            <p class="hint">Calibration δ — what the SP4 head learns per-patient.</p>
-            <div class="ctl slider amber disabled" id="wrap_ec50"><label>δ EC50 · sensitivity<span data-out="delta_ec50">0.00</span></label>
-              <input type="range" id="delta_ec50" min="-0.7" max="0.7" step="0.05" value="0" disabled /></div>
-            <div class="ctl slider amber disabled" id="wrap_ke0"><label>δ ke0 · onset<span data-out="delta_ke0">0.00</span></label>
-              <input type="range" id="delta_ke0" min="-0.7" max="0.7" step="0.05" value="0" disabled /></div>
+            <p class="hint">Calibration δ — the multiplicative perturbations the SP4 head learns per patient. Off means the population model.</p>
+            <div class="ctl slider amber disabled" id="wrap_ec50">
+              <label>δ EC50 · sensitivity<span data-out="delta_ec50">0.00</span></label>
+              <input type="range" id="delta_ec50" min="-0.7" max="0.7" step="0.05" value="0" disabled />
+            </div>
+            <div class="ctl slider amber disabled" id="wrap_ke0">
+              <label>δ ke0 · onset<span data-out="delta_ke0">0.00</span></label>
+              <input type="range" id="delta_ke0" min="-0.7" max="0.7" step="0.05" value="0" disabled />
+            </div>
           </section>
 
           <section class="card">
-            <div class="card-head"><h2 class="soft-title sm accent-pink">Real patient · VitalDB</h2></div>
-            <p class="hint">Ground the twin against an actual case's measured MAP.</p>
-            <select id="caseSelect" class="select"><option value="">Select a case…</option></select>
+            <div class="card-head">
+              <h2 class="soft-title sm accent-pink">Real patient · VitalDB</h2>
+            </div>
+            <p class="hint">Ground the twin against an actual case's measured arterial pressure.</p>
+            <select id="caseSelect" class="select" aria-label="VitalDB case">
+              <option value="">Select a case…</option>
+            </select>
             <div class="real-btns">
               <button id="loadCase" class="btn" disabled>Load case</button>
-              <button id="calibrate" class="btn btn-accent" disabled>Calibrate twin ⟳</button>
+              <button id="calibrate" class="btn btn-accent" disabled>Calibrate ⟳</button>
             </div>
             <p class="hint" id="caseInfo"></p>
-            <label class="check"><input type="checkbox" id="show_band" checked /><span>Show confidence band</span></label>
+            <label class="check">
+              <input type="checkbox" id="show_band" checked /><span>Show confidence band</span>
+            </label>
             <p class="modelcard" id="modelCard"></p>
           </section>
+
         </div>
       </div>
 
-      <!-- RIGHT: controls -->
+      <!-- ----------------------------------------------------- right rail -->
       <div class="col-controls">
+
         <section class="card">
           <div class="card-head"><h2 class="soft-title sm">Presets</h2></div>
           <div class="preset-row">
             <button class="preset" data-preset="healthy">Healthy adult</button>
             <button class="preset" data-preset="frail">Frail elderly</button>
           </div>
-          <div class="divider"></div>
+        </section>
+
+        <section class="card">
           <div class="card-head"><h2 class="soft-title sm">Patient</h2></div>
           <div class="ctl slider amber"><label>Age<span data-out="age">60 yrs</span></label>
             <input type="range" id="age" min="18" max="90" value="60" /></div>
@@ -127,7 +150,10 @@
           <div class="ctl slider amber"><label>Height<span data-out="height">170 cm</span></label>
             <input type="range" id="height" min="140" max="200" value="170" /></div>
           <div class="ctl seg"><label>Sex</label>
-            <div class="segbtns" id="sex"><button data-sex="M" class="active">M</button><button data-sex="F">F</button></div></div>
+            <div class="segbtns" id="sex">
+              <button data-sex="M" class="active">M</button><button data-sex="F">F</button>
+            </div>
+          </div>
           <div class="ctl slider amber"><label>Baseline MAP<span data-out="map0">90 mmHg</span></label>
             <input type="range" id="map0" min="60" max="120" value="90" /></div>
           <div class="ctl slider amber"><label>Horizon<span data-out="duration">15 min</span></label>
@@ -135,18 +161,25 @@
         </section>
 
         <section class="card">
-          <div class="card-head"><h2 class="soft-title sm accent-amber">Propofol</h2>
-            <span class="big-num amber" id="propBig">30<em>mg/min</em></span></div>
+          <div class="card-head">
+            <h2 class="soft-title sm accent-amber">Propofol</h2>
+            <span class="big-num amber" id="propBig">30<em>mg/min</em></span>
+          </div>
           <div class="ctl slider amber"><label>Infusion rate<span data-out="propofol">30</span></label>
             <input type="range" id="propofol" min="0" max="80" value="30" /></div>
-          <div class="divider"></div>
-          <div class="card-head"><h2 class="soft-title sm accent-green">Norepinephrine</h2>
-            <span class="big-num green" id="neBig">0<em>µg/min</em></span></div>
+        </section>
+
+        <section class="card">
+          <div class="card-head">
+            <h2 class="soft-title sm accent-green">Norepinephrine</h2>
+            <span class="big-num green" id="neBig">0<em>µg/min</em></span>
+          </div>
           <div class="ctl slider green"><label>Infusion rate<span data-out="norepi">0</span></label>
             <input type="range" id="norepi" min="0" max="30" value="0" /></div>
-          <div class="ctl slider green"><label>Start<span data-out="norepi_start">0 min</span></label>
+          <div class="ctl slider green"><label>Start time<span data-out="norepi_start">0 min</span></label>
             <input type="range" id="norepi_start" min="0" max="30" value="0" /></div>
         </section>
+
       </div>
     </div>
   </main>

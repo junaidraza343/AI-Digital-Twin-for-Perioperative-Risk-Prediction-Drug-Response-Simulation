@@ -4,64 +4,70 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Digital Twin — ML Ops Console</title>
-  <link rel="icon" href="data:," />
+  <meta name="description" content="Training pipeline, model performance and the selection-bias study for the perioperative digital twin." />
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Ccircle cx='16' cy='16' r='13' fill='none' stroke='%23f2b441' stroke-width='2'/%3E%3Ccircle cx='16' cy='16' r='4' fill='%23f2b441'/%3E%3C/svg%3E" />
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-  <link href="https://fonts.googleapis.com/css2?family=Chakra+Petch:wght@500;600;700&family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Sans:wght@400;500;600&display=swap" rel="stylesheet" />
   <link rel="stylesheet" href="/styles.css" />
 </head>
-<body class="soft">
-  <div class="scanlines" aria-hidden="true"></div>
+<body>
 
   <header class="topbar">
     <div class="brand">
-      <span class="led"></span>
+      <span class="led warn" aria-hidden="true"></span>
       <div class="brand-text">
-        <h1>DIGITAL&nbsp;TWIN&nbsp;·&nbsp;ML&nbsp;OPS&nbsp;CONSOLE</h1>
+        <h1>ML Ops Console</h1>
         <p>Training pipeline · model performance · selection-bias study</p>
       </div>
     </div>
     <div class="brand-meta">
-      <a class="tag linktag" href="/">← Clinical monitor</a>
+      <div class="pill-row">
+        <a class="pill pill-solid" href="/">← Clinical monitor</a>
+      </div>
       <span class="clock" id="clock">--:--:--</span>
     </div>
   </header>
 
-  <main class="admin">
-    <!-- STATUS -->
-    <section class="stat-grid" id="statGrid"></section>
+  <main class="console">
 
-    <div class="admin-cols">
-      <!-- LEFT: training controls -->
-      <aside class="admin-left">
+    <section class="stat-grid" id="statGrid" aria-label="Pipeline status"></section>
+
+    <div class="admin-grid">
+
+      <!-- ------------------------------------------------ controls column -->
+      <div class="admin-left">
+
         <section class="panel">
           <div class="panel-head"><h2>Admin access</h2></div>
-          <p class="hint">Retrain and dataset-build spawn compute, so they require
-            the deployment's admin token. Stored only in this browser. Leave blank
-            on a read-only deployment.</p>
+          <p class="hint">Retraining and dataset builds spawn compute, so they require this
+            deployment's admin token. It is stored only in this browser and sent as
+            <span class="mono">X-Admin-Token</span>. Leave blank on a read-only deployment.</p>
           <label class="field">Admin token
-            <input type="password" id="adminToken" autocomplete="off"
-                   placeholder="X-Admin-Token" /></label>
+            <input type="password" id="adminToken" autocomplete="off" placeholder="X-Admin-Token" />
+          </label>
           <div id="adminTokenMsg" class="hint"></div>
         </section>
 
         <section class="panel">
           <div class="panel-head"><h2>Training pipeline</h2></div>
-          <p class="hint">Retrain on the existing dataset (fast, no network).</p>
+          <p class="hint">Retrain on the dataset already on disk. Fast, and needs no network.</p>
           <button class="btn btn-grad-warm full" id="btnRetrain">Retrain predictor + GBDT ⟳</button>
           <button class="btn full" id="btnRescan">Rescan demo cases</button>
           <div class="joblog" id="trainLog" hidden>
             <div class="job-head"><span id="trainStage">Training…</span><span id="trainPct">0%</span></div>
             <div class="progress"><div class="progress-fill" id="trainFill"></div></div>
           </div>
-          <div id="trainMsg" class="hint"></div>
+          <div id="trainMsg" class="hint" style="margin-bottom:0"></div>
         </section>
 
         <section class="panel accent-real">
           <div class="panel-head"><h2>Build dataset · VitalDB</h2></div>
-          <p class="hint">Run the full pipeline on N cases (network + a few minutes). Replaces the current dataset.</p>
-          <label class="ctl"><span class="lbl">Cases <b id="nCasesOut">100</b></span>
-            <input type="range" id="nCases" min="20" max="600" step="20" value="100" /></label>
+          <p class="hint">Run the full pipeline over N cases. Needs network and several minutes,
+            and replaces the current dataset.</p>
+          <div class="ctl slider green">
+            <label>Cases<span id="nCasesOut">100</span></label>
+            <input type="range" id="nCases" min="20" max="600" step="20" value="100" />
+          </div>
           <button class="btn btn-grad-cool full" id="btnBuild">Start build ▶</button>
           <div class="joblog" id="jobLog" hidden>
             <div class="job-head"><span id="jobStage">—</span><span id="jobPct">0%</span></div>
@@ -73,37 +79,50 @@
 
         <section class="panel">
           <div class="panel-head"><h2>System</h2></div>
-          <div class="kv"><span>Runtime</span><b id="sysRuntime">—</b></div>
-          <div class="kv"><span>Seed</span><b id="sysSeed">—</b></div>
-          <div class="kv"><span>Horizon</span><b id="sysHorizon">—</b></div>
-          <div class="kv"><span>MAP threshold</span><b id="sysThresh">—</b></div>
-          <div class="kv"><span>Last train</span><b id="sysLastTrain">—</b></div>
-          <div class="kv"><span>Artifact</span><b id="sysArtifact">—</b></div>
+          <div class="sys-list">
+            <div class="sys-row"><span class="k">Runtime</span><span class="v" id="sysRuntime">—</span></div>
+            <div class="sys-row"><span class="k">Seed</span><span class="v" id="sysSeed">—</span></div>
+            <div class="sys-row"><span class="k">Horizon</span><span class="v" id="sysHorizon">—</span></div>
+            <div class="sys-row"><span class="k">MAP threshold</span><span class="v" id="sysThresh">—</span></div>
+            <div class="sys-row"><span class="k">Last train</span><span class="v" id="sysLastTrain">—</span></div>
+            <div class="sys-row"><span class="k">Artifact</span><span class="v" id="sysArtifact">—</span></div>
+          </div>
         </section>
-      </aside>
 
-      <!-- RIGHT: metrics + curves -->
-      <section class="admin-right">
+      </div>
+
+      <!-- ------------------------------------------------- results column -->
+      <div class="admin-right">
+
         <section class="panel">
-          <div class="panel-head"><h2>Selection-bias study · model × regime</h2></div>
-          <p class="hint" style="margin-top:-6px">Same features, three sampling regimes. Compare AUROC, PPV, calibration.</p>
+          <div class="panel-head"><h2>Selection-bias study</h2>
+            <span class="chip">model × regime</span>
+          </div>
+          <p class="hint">The same features under three sampling regimes. Compare discrimination
+            (AUROC, AUPRC), clinical yield (PPV) and calibration (ECE).</p>
           <div class="table-wrap"><table id="metricsTable"></table></div>
-          <p class="hint">Headline: PPV collapses biased→unbiased, and GBDT shows no
-            clinically meaningful gain over MAP-only on unbiased data (except the gray zone).</p>
+          <p class="hint" style="margin-bottom:0">PPV collapses from the biased regime to the
+            unbiased one, and GBDT shows no clinically meaningful gain over MAP-only on unbiased
+            data — except inside the gray zone.</p>
         </section>
 
         <section class="panel">
-          <div class="panel-head"><h2>Performance curves · unbiased test</h2>
-            <span class="legend-inline"><i class="sw-cyan"></i>MAP-only <i class="sw-amber"></i>GBDT</span>
+          <div class="panel-head"><h2>Performance curves</h2>
+            <span class="legend">
+              <span class="lg lg-pop">MAP-only</span>
+              <span class="lg lg-pers">GBDT</span>
+            </span>
           </div>
+          <p class="hint">Unbiased test split.</p>
           <div class="curve-grid">
-            <figure><figcaption>ROC</figcaption><canvas id="rocC"></canvas></figure>
-            <figure><figcaption>Precision–Recall</figcaption><canvas id="prC"></canvas></figure>
-            <figure><figcaption>Calibration</figcaption><canvas id="calC"></canvas></figure>
-            <figure><figcaption>Decision curve · net benefit</figcaption><canvas id="dcaC"></canvas></figure>
+            <figure style="margin:0"><figcaption class="micro" style="margin-bottom:8px">Receiver operating characteristic</figcaption><canvas id="rocC"></canvas></figure>
+            <figure style="margin:0"><figcaption class="micro" style="margin-bottom:8px">Precision–recall</figcaption><canvas id="prC"></canvas></figure>
+            <figure style="margin:0"><figcaption class="micro" style="margin-bottom:8px">Calibration</figcaption><canvas id="calC"></canvas></figure>
+            <figure style="margin:0"><figcaption class="micro" style="margin-bottom:8px">Decision curve · net benefit</figcaption><canvas id="dcaC"></canvas></figure>
           </div>
         </section>
-      </section>
+
+      </div>
     </div>
   </main>
 
