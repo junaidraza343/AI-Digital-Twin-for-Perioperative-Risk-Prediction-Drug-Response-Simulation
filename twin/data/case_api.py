@@ -12,7 +12,7 @@ import numpy as np
 import pandas as pd
 
 import twin.config as c
-from twin.data.vitaldb_loader import load_numeric_frame
+from twin.data.vitaldb_loader import load_numeric_frame, cached_caseids
 from twin.data.labeling import make_map_series
 
 WINDOW_S = 900          # 15 min shown
@@ -48,8 +48,12 @@ def scan_demo_cases(max_cases: int = 40) -> list:
 
     Writes results/demo_cases.json. Run once after a data build.
     """
+    # Offline means offline: only consider cases already on disk for the current
+    # track set. Walking every eligible case would download the misses, which on a
+    # deployment that bundles a handful of cases is thousands of requests.
+    on_disk = cached_caseids()
     out = []
-    for cid in _all_cases():
+    for cid in (cid for cid in _all_cases() if cid in on_disk):
         try:
             v = _clean(make_map_series(load_numeric_frame(cid)))
             v = v[~np.isnan(v)]

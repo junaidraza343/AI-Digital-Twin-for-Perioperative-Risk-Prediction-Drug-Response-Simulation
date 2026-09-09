@@ -22,3 +22,32 @@ def test_bundle_with_predictor_returns_probability():
     b = load_case_bundle(_CASES[0], model=model)
     assert len(b["prob_real"]) == len(b["map_real"])
     assert 0.0 <= b["peak_prob"] <= 1.0
+
+
+def test_scan_demo_cases_never_downloads_uncached_cases(tmp_path, monkeypatch):
+    """scan_demo_cases is documented as an OFFLINE scan and must behave like one.
+
+    It previously walked every eligible case and loaded each one, so on a
+    deployment that bundles only a handful of cases it fired thousands of VitalDB
+    downloads and pinned the request worker.
+    """
+    import twin.config as c
+    import twin.data.case_api as case_api
+    from twin.data.vitaldb_loader import _tracks_tag
+
+    monkeypatch.setattr(c, "DATA_CACHE", tmp_path)
+    monkeypatch.setattr(c, "RESULTS_DIR", tmp_path)
+    (tmp_path / f"case_7_{_tracks_tag()}.parquet").write_bytes(b"")
+    monkeypatch.setattr(case_api, "_all_cases", lambda: [7, 8, 9])
+
+    seen = []
+
+    def spy_loader(caseid):
+        seen.append(caseid)
+        raise RuntimeError("unreadable stub")   # content does not matter here
+
+    monkeypatch.setattr(case_api, "load_numeric_frame", spy_loader)
+    case_api.available_cases.cache_clear()
+    case_api.scan_demo_cases()
+
+    assert seen == [7], f"attempted uncached cases: {seen}"

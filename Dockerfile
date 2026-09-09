@@ -19,7 +19,9 @@ RUN apt-get update && apt-get install -y --no-install-recommends libgomp1 \
 # Pinned: an unpinned image silently changes model behaviour between builds,
 # so a deployment could stop reproducing the numbers reported in the write-up.
 # These match the versions the results were generated with.
-RUN pip install --no-cache-dir \
+# Large wheels (pyarrow, scikit-learn, lightgbm) time out on a loaded network;
+# without explicit retries the whole image build fails on one slow download.
+RUN pip install --no-cache-dir --retries 10 --timeout 120 \
     "numpy==1.26.4" \
     "pandas==2.3.1" \
     "pyarrow==19.0.1" \
@@ -58,9 +60,11 @@ RUN useradd -m -u 1000 twin && chown -R twin:twin /app
 USER twin
 
 # Admin controls (retrain, dataset build) spawn compute and are DISABLED unless
-# ADMIN_TOKEN is set; callers must then send it as X-Admin-Token. Left unset here
-# on purpose so a default deployment is read-only.
-ENV ADMIN_TOKEN=""
+# ADMIN_TOKEN is set in the environment; callers must then send it as
+# X-Admin-Token. Deliberately NOT declared as ENV here: baking a credential name
+# into image metadata is what SecretsUsedInArgOrEnv warns about, and an unset
+# variable already gives the read-only default. Supply it at run time:
+#   docker run -e ADMIN_TOKEN="$(openssl rand -hex 24)" ...
 
 EXPOSE 8000
 
