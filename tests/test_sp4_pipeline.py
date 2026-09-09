@@ -123,3 +123,21 @@ def test_load_case_rejects_artifact_baseline_and_cleans_observed(small_windows):
     obs = case["observed"].numpy()[0]
     valid = obs[~np.isnan(obs)]
     assert valid.min() >= 40.0 and valid.max() <= 200.0
+
+
+def test_evaluate_cohort_reports_heldout_prediction_and_personalization(small_windows):
+    """SP4's claim is about UNSEEN cases: the head must emit a useful delta with
+    no teacher fit available. Evaluation therefore runs the model forward only and
+    compares its personalized reconstruction against the population twin.
+    """
+    from scripts.sp4_pipeline import evaluate_cohort
+    cohort, loader = _cohort_and_loader()
+    train, held_out = cohort[:2], cohort[2:]
+    model, prep, cols, _ = run_stage1_cohort(
+        train, loader_fn=loader, teacher_iters=10, epochs=20, lr=1e-2, device="cpu")
+
+    res = evaluate_cohort(model, prep, cols, held_out, loader_fn=loader, device="cpu")
+
+    assert res["n_cases"] == 1 and res["n_windows"] > 0
+    assert 0.0 <= res["ece"] <= 1.0 and 0.0 <= res["brier"] <= 1.0
+    assert res["population_rmse"] > 0 and res["personalized_rmse"] > 0

@@ -17,6 +17,8 @@ from scripts.sp4_pipeline import (load_case, run_stage1_cohort, run_stage2_cohor
                                   feature_columns)
 from twin.data.vitaldb_loader import _tracks_tag
 from twin.eval.personalization import delta_identifiability
+from twin.data.splits import make_splits
+from scripts.sp4_pipeline import evaluate_cohort
 
 
 def length_sorted_cohort(caseids, eligible):
@@ -47,22 +49,32 @@ def main():
     args = ap.parse_args()
 
     ids = pd.read_csv(c.RESULTS_DIR / "sp4_cohort.csv")["caseid"].tolist()
-    eligible = pd.read_csv(c.RESULTS_DIR / "eligible_cases.csv").set_index("caseid")
+    eligible_df = pd.read_csv(c.RESULTS_DIR / "eligible_cases.csv")
+    eligible = eligible_df.set_index("caseid")
     cohort = length_sorted_cohort(ids, eligible)
     if args.n_cases:
         cohort = cohort[:args.n_cases]
-    print(f"SP4 cohort: {len(cohort)} cases | device={args.device}", flush=True)
+
+    # Case-level stratified split: the calibration head is only interesting if its
+    # delta generalizes to a patient it never saw, so held-out cases are never
+    # touched by either training stage.
+    cohort_ids = {cid for cid, _ in cohort}
+    split = make_splits(eligible_df[eligible_df["caseid"].isin(cohort_ids)])
+    train = [(cid, row) for cid, row in cohort if split.get(cid) == "train"]
+    test = [(cid, row) for cid, row in cohort if split.get(cid) == "test"]
+    print(f"SP4 cohort: {len(cohort)} cases -> train {len(train)} / test {len(test)}"
+          f" | device={args.device}", flush=True)
 
     t0 = time.time()
     model, prep, cols, info1 = run_stage1_cohort(
-        cohort, teacher_iters=args.teacher_iters, epochs=args.stage1_epochs,
+        train, teacher_iters=args.teacher_iters, epochs=args.stage1_epochs,
         latent_dim=32, device=args.device, teacher_batch_size=args.teacher_batch,
         progress=True, save_path=c.RESULTS_DIR / "coupled_stage1.pt")
     print(f"stage1 {info1} in {time.time()-t0:.0f}s", flush=True)
 
     t1 = time.time()
     model, info2 = run_stage2_cohort(
-        cohort, model, prep, cols, epochs=args.stage2_epochs,
+        train, model, prep, cols, epochs=args.stage2_epochs,
         device=args.device, case_batch_size=args.case_batch, progress=True,
         save_path=c.RESULTS_DIR / "coupled_stage2.pt")
     print(f"stage2 {info2} in {time.time()-t1:.0f}s", flush=True)
@@ -89,7 +101,13 @@ def main():
 
     ident = delta_identifiability(
         torch.tensor(deltas[["V1", "V2", "V3", "ke0", "EC50", "gamma"]].to_numpy()))
-    out = {"n_cases": int(len(deltas)), "stage1": info1, "stage2": info2,
+
+    print("evaluating on held-out cases...", flush=True)
+    heldout = evaluate_cohort(model, prep, cols, test, device=args.device)
+    print(f"held-out: {heldout}", flush=True)
+
+    out = {"n_cases": int(len(deltas)), "n_train": len(train), "n_test": len(test),
+           "stage1": info1, "stage2": info2, "held_out": heldout,
            "delta_std": [float(v) for v in np.asarray(ident)],
            "teacher_iters": args.teacher_iters}
     (c.RESULTS_DIR / "sp4_results.json").write_text(json.dumps(out, indent=2))

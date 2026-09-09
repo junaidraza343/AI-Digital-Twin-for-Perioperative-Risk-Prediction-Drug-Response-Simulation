@@ -26,6 +26,8 @@ from twin.pkpd import torch_engine as te
 from twin.models.coupled import CoupledTwin
 from twin.models.deepnet import pick_device
 from scripts.train_calibration import FeaturePrep, distill_step
+from twin.eval.metrics import (auroc, auprc, brier, ppv_at_alarm_rate,
+                              expected_calibration_error)
 
 META_COLS = ("caseid", "t_end", "y", "category")
 
@@ -288,3 +290,66 @@ def run_stage2_cohort(cohort, model, prep, cols, loader_fn=_default_loader, *,
                     "prep": {"columns": prep.columns, "med": prep.med,
                              "mu": prep.mu, "sd": prep.sd}}, save_path)
     return model, info
+
+
+def evaluate_cohort(model, prep, cols, cohort, loader_fn=_default_loader, device=None):
+    """Evaluate a trained coupled twin on cases it was not trained on.
+
+    Runs the model forward only -- no teacher fit -- because on a new patient no
+    fitted delta exists; that is the whole point of amortizing the teacher into a
+    calibration head. Reports window-level IOH discrimination/calibration and, per
+    case, the MAP reconstruction of the head's delta against the population twin
+    (delta = 0), which is the personalization claim.
+    """
+    device = device or next(model.parameters()).device
+    model.eval()
+    ys, ps, pop_rmse, per_rmse, n_windows = [], [], [], [], 0
+    for caseid, static_row in cohort:
+        try:
+            case = load_case(caseid, static_row, loader_fn=loader_fn, device=device)
+        except Exception as exc:
+            print(f"  skip case {caseid}: {exc}")
+            continue
+        if case is None:
+            continue
+        w = case["windows"]
+        x = torch.tensor(prep.transform(w[cols]), dtype=torch.float32, device=device)
+        with torch.no_grad():
+            logit, delta, _ = model(x)
+            prob = torch.sigmoid(logit).cpu().numpy()
+            delta_case = delta.mean(dim=0, keepdim=True).to(torch.float64)
+            zero = torch.zeros_like(delta_case)
+            obs = case["observed"]
+            mask = ~torch.isnan(obs)
+            filled = torch.nan_to_num(obs, nan=0.0)
+
+            def rmse(d):
+                pred = te.project_map_torch([case["patient"]], case["prop"],
+                                            case["norepi"], d)
+                m = min(pred.shape[1], filled.shape[1])
+                err = (pred[:, :m] - filled[:, :m]) * mask[:, :m]
+                mse = (err ** 2).sum() / mask[:, :m].sum().clamp(min=1.0)
+                return float(mse.sqrt())
+
+            pop_rmse.append(rmse(zero))
+            per_rmse.append(rmse(delta_case))
+        ys.append(w["y"].to_numpy(dtype=float))
+        ps.append(prob)
+        n_windows += len(w)
+
+    if not ys:
+        raise ValueError("No held-out case produced any prediction windows.")
+    y = np.concatenate(ys)
+    p = np.concatenate(ps)
+    pop_rmse = np.asarray(pop_rmse)
+    per_rmse = np.asarray(per_rmse)
+    return {
+        "n_cases": len(pop_rmse), "n_windows": int(n_windows),
+        "prevalence": float(y.mean()),
+        "auroc": float(auroc(y, p)), "auprc": float(auprc(y, p)),
+        "ppv": float(ppv_at_alarm_rate(y, p)),
+        "ece": float(expected_calibration_error(y, p)), "brier": float(brier(y, p)),
+        "population_rmse": float(pop_rmse.mean()),
+        "personalized_rmse": float(per_rmse.mean()),
+        "improved_case_count": int((per_rmse < pop_rmse).sum()),
+    }
