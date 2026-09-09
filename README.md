@@ -205,3 +205,43 @@ python3 -m pytest -q
 
 Python 3.10 · FastAPI · NumPy/Pandas · scikit-learn · PyTorch · vitaldb ·
 Streamlit · Docker · vanilla HTML/CSS/canvas JS.
+
+---
+
+## Production deployment
+
+```bash
+docker build -t fyp-twin:prod .
+docker run -d -p 8000:8000 --name fyp-twin fyp-twin:prod
+```
+
+Clinical monitor at `/`, ML-Ops console at `/admin`, liveness at `/health`.
+The image bundles the trained predictor and the curated real VitalDB cases, so
+the clinical monitor runs **fully offline**.
+
+### Admin controls are disabled by default
+
+`/api/admin/train-predictor`, `/api/admin/rescan-cases` and `/api/admin/build`
+spawn compute — the last one launches a VitalDB download subprocess. They are
+therefore **gated and fail closed**: with no `ADMIN_TOKEN` set they return `503`,
+so a default deployment is read-only and cannot be used to burn someone else's
+CPU or bandwidth.
+
+To enable them:
+
+```bash
+docker run -d -p 8000:8000 -e ADMIN_TOKEN="$(openssl rand -hex 24)" fyp-twin:prod
+```
+
+Then paste the same value into **Admin access → Admin token** on `/admin`; the
+browser stores it locally and sends it as `X-Admin-Token`. A wrong token gives
+`401`. Read-only status, metrics and curves never require it.
+
+Serve over HTTPS in front of the container — the token is sent as a plain header.
+
+### Reproducibility
+
+Image dependencies are pinned to the versions the reported results were produced
+with. Bundled case files are keyed by a hash of `NUMERIC_TRACKS`; if you change
+that list, re-run `python -m scripts.build_demo_cache` or the image will miss its
+cache at runtime and try to reach VitalDB.

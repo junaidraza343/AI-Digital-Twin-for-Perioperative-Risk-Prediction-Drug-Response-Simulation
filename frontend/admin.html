@@ -35,6 +35,17 @@
       <!-- LEFT: training controls -->
       <aside class="admin-left">
         <section class="panel">
+          <div class="panel-head"><h2>Admin access</h2></div>
+          <p class="hint">Retrain and dataset-build spawn compute, so they require
+            the deployment's admin token. Stored only in this browser. Leave blank
+            on a read-only deployment.</p>
+          <label class="field">Admin token
+            <input type="password" id="adminToken" autocomplete="off"
+                   placeholder="X-Admin-Token" /></label>
+          <div id="adminTokenMsg" class="hint"></div>
+        </section>
+
+        <section class="panel">
           <div class="panel-head"><h2>Training pipeline</h2></div>
           <p class="hint">Retrain on the existing dataset (fast, no network).</p>
           <button class="btn btn-grad-warm full" id="btnRetrain">Retrain predictor + GBDT ⟳</button>

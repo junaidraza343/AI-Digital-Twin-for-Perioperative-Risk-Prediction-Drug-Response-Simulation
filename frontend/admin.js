@@ -1,3 +1,34 @@
+// --- admin auth -------------------------------------------------------------
+// Mutating endpoints require X-Admin-Token and return 503 when the deployment
+// has no ADMIN_TOKEN configured (the read-only default). The token is kept in
+// localStorage so it is never baked into the served bundle.
+const ADMIN_TOKEN_KEY = "twin.adminToken";
+
+function adminToken() {
+  try { return localStorage.getItem(ADMIN_TOKEN_KEY) || ""; } catch { return ""; }
+}
+
+function setAdminToken(v) {
+  try { localStorage.setItem(ADMIN_TOKEN_KEY, v); } catch { /* private mode */ }
+}
+
+/** POST to an admin endpoint, surfacing the two auth failures in plain words. */
+async function adminPost(url) {
+  const res = await fetch(url, {
+    method: "POST",
+    headers: adminToken() ? { "X-Admin-Token": adminToken() } : {},
+  });
+  if (res.status === 503) {
+    throw new Error("Admin controls are disabled on this deployment "
+                    + "(ADMIN_TOKEN is not set on the server).");
+  }
+  if (res.status === 401) {
+    throw new Error("Admin token rejected. Set a valid token to run this.");
+  }
+  if (!res.ok) throw new Error(`Request failed (${res.status}).`);
+  return res.json();
+}
+
 /* Digital Twin — ML Ops console controller. */
 const CYAN = "#35e0c8", AMBER = "#ffb020", GRID = "#132230", INK = "#7d94a3";
 
@@ -171,7 +202,7 @@ document.getElementById("btnRetrain").addEventListener("click", async (e) => {
   const done = startProgress("training MAP-only + GBDT…");
   let job_id;
   try {
-    ({ job_id } = await (await fetch("/api/admin/train-predictor", { method: "POST" })).json());
+    ({ job_id } = await adminPost("/api/admin/train-predictor"));
   } catch (err) { done(); trainMsg.textContent = "Could not start training."; e.target.disabled = false; return; }
 
   const tick = async () => {
@@ -198,7 +229,7 @@ document.getElementById("btnRetrain").addEventListener("click", async (e) => {
 document.getElementById("btnRescan").addEventListener("click", async (e) => {
   e.target.disabled = true;
   const done = startProgress("rescanning demo cases…");
-  try { const d = await (await fetch("/api/admin/rescan-cases", { method: "POST" })).json(); trainMsg.textContent = `Rescanned: ${d.n} demo cases.`; }
+  try { const d = await adminPost("/api/admin/rescan-cases"); trainMsg.textContent = `Rescanned: ${d.n} demo cases.`; }
   catch (err) { trainMsg.textContent = "Rescan failed."; }
   done(); await loadStatus();
   e.target.disabled = false;
@@ -211,7 +242,7 @@ document.getElementById("btnBuild").addEventListener("click", async (e) => {
   e.target.disabled = true;
   const log = document.getElementById("jobLog"); log.hidden = false;
   try {
-    const { job_id } = await (await fetch(`/api/admin/build?n_cases=${nCases.value}`, { method: "POST" })).json();
+    const { job_id } = await adminPost(`/api/admin/build?n_cases=${nCases.value}`);
     poll(job_id, e.target);
   } catch (err) { document.getElementById("jobOut").textContent = "Failed to start build."; e.target.disabled = false; }
 });
@@ -240,3 +271,18 @@ async function poll(id, btn) {
 
 /* boot */
 refreshAll();
+
+// --- admin token field ------------------------------------------------------
+(function wireAdminToken() {
+  const input = document.getElementById("adminToken");
+  const msg = document.getElementById("adminTokenMsg");
+  if (!input) return;
+  input.value = adminToken();
+  const render = () => {
+    msg.textContent = input.value
+      ? "Token set — admin actions enabled."
+      : "No token — admin actions will be refused.";
+  };
+  input.addEventListener("input", () => { setAdminToken(input.value.trim()); render(); });
+  render();
+})();
