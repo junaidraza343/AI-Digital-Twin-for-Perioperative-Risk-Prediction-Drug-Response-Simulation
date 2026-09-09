@@ -42,13 +42,61 @@ claim was wrong.** The paper trains on 319,699 cases from Nanjing Drum Tower
 Hospital and externally validates on **5,260 VitalDB cases**. The thesis sentence
 "externally validated on VitalDB" is accurate and should be kept.
 
+## [17] — placeholder author list, now resolved
+
+**Currently in the thesis:** `Authors. (2025). Digital twins in healthcare: a
+comprehensive review and future directions. Frontiers in Digital Health, 7, 1633539.`
+
+**Correct (Crossref, DOI 10.3389/fdgth.2025.1633539):**
+> Khoshfekr Rudsari, H., Tseng, B., Zhu, H., & Song, L. (2025). Digital twins in
+> healthcare: a comprehensive review and future directions. *Frontiers in Digital
+> Health*, 7, 1633539. https://doi.org/10.3389/fdgth.2025.1633539
+
+Journal, volume and article number were right; only the authors were a placeholder.
+
+## [19] — placeholder authors AND the wrong journal
+
+**Currently in the thesis:** `Authors. (2025). Digital twin for the formal analysis
+of a depth of anesthesia controller. Anesthesiology / IEEE Transactions on
+Biomedical Engineering.` Body text in Section 1.2.6 calls it "A 2025 paper in
+**Anesthesiology**".
+
+**Correct (Crossref, DOI 10.1177/00375497241311617):**
+> AbdElSalam, M., Bensalem, S., Delacourt, A., & He, W. (2025). Digital twin for
+> the formal analysis of a depth of anesthesia controller. *SIMULATION*, 101(3),
+> 341–360. https://doi.org/10.1177/00375497241311617
+
+It appeared in **SIMULATION**, not *Anesthesiology* and not *IEEE TBME*. Both the
+reference entry and the sentence in Section 1.2.6 need correcting.
+
+## [18] — does NOT resolve as cited
+
+**Currently in the thesis:** `Kovatchev, B., et al. (2023). Whole-body metabolic
+digital twin for type-2 diabetes management. Nature Medicine / npj Digital Medicine.`
+
+No such paper could be located. Crossref returns no whole-body metabolic digital
+twin paper by Kovatchev; his indexed work in this area is on glycemic risk
+algorithms (*Diabetes Technology & Therapeutics* 2003). The digital-twin-for-T2D
+literature the sentence describes appears to be **Shamanna and colleagues**, e.g.
+
+> Shamanna, P., Joshi, S., Thajudeen, M., & Shah, L. (2024). Personalized nutrition
+> in type 2 diabetes remission: application of digital twin technology.
+> *Frontiers in Endocrinology*, 15, 1485464. https://doi.org/10.3389/fendo.2024.1485464
+
+**Do not simply swap the name** — check which study was actually intended, then
+cite it properly. A reference naming two alternative journals with a slash is
+itself a signal the source was never verified.
+
 ## Still unverified
 
-These were flagged earlier and have NOT yet been DOI-checked: Hatib 2018,
-Wijnberge 2020 (HYPE), Enevoldsen 2022, Lee 2021 BJA, Jo 2021, Eleveld 2018,
-Joachim 2024, Vital Recorder 2018, VitalDB 2022, Corral-Acero 2020, and refs
-[17]/[19] which are cited generically ("A 2025 comprehensive review", "A 2025
-paper in Anesthesiology") and need concrete author attribution.
+These have NOT yet been DOI-checked: Hatib 2018 [6], Wijnberge 2020 HYPE [7],
+Lee 2021 [8], Jo 2021 [10], Roh 2025 [11] (cited as "& colleagues"), Wang 2025
+[13] (cited as "et al."), Eleveld 2018, Joachim 2024, Vital Recorder 2018 [3],
+VitalDB 2022 [4], Corral-Acero 2020 [15].
+
+Note the pattern: every reference that was written as "Authors.", "& colleagues"
+or a bare "et al." has so far turned out to contain an error. Refs [11] and [13]
+use that form and should be checked next.
 
 ## Prior art that must be cited
 
