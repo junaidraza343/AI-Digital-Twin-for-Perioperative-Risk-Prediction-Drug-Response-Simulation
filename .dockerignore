@@ -7,12 +7,10 @@ __pycache__/
 notebooks/
 docs/
 tests/
-scripts/
 dashboard/
 *.docx
 *.log
-# large/unneeded data (runtime uses demo_cases.json + cached frames instead)
-results/windows.parquet
-results/selection_bias_results.csv
-results/decision_curve.csv
-results/cohort_funnel.csv
+# The full dev cache is 113 MB of cases the UI can't select; the image bundles
+# the 40 curated demo cases from deploy/demo_cache/ instead.
+data_cache/
+report_assets/

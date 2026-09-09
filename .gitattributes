@@ -5,3 +5,7 @@
 *.parquet binary
 *.docx binary
 *.ico binary
+
+# The training-window matrix is 68 MB — too big for a plain blob on GitHub
+# (>50 MB warning) and over Hugging Face's 10 MB non-LFS limit.
+results/windows.parquet filter=lfs diff=lfs merge=lfs -text

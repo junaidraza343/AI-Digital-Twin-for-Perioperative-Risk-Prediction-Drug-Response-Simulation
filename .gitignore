@@ -16,4 +16,10 @@ venv/
 
 # Run logs & large derived data
 *.log
-results/eligible_cases.csv
+
+# Deploy artifacts: the live demo builds from the repo alone, so the runtime
+# inputs the ML-Ops console needs are tracked (windows.parquet via LFS) and the
+# 40 curated demo cases live in deploy/demo_cache/ rather than the dev cache.
+!results/eligible_cases.csv
+!results/windows.parquet
+!deploy/demo_cache/*.parquet
