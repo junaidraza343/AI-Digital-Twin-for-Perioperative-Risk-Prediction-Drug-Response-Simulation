@@ -800,7 +800,10 @@ html { scrollbar-color: var(--ink-4) var(--paper); scrollbar-width: thin; }
   .console { padding: 0 20px 40px; }
   .topbar { padding: 24px 20px 14px; flex-wrap: wrap; }
   .brand-text h1 { font-size: 30px; }
-  .brand-meta { flex: 1 1 100%; justify-content: space-between; padding-bottom: 0; }
+  /* pills wrap to two lines on narrow screens; align the clock to the first
+     row rather than letting it float against the middle of the block */
+  .brand-meta { flex: 1 1 100%; justify-content: space-between;
+                align-items: flex-start; padding-bottom: 0; margin-top: 4px; }
   .pill-row { flex-wrap: wrap; }
   .vitals { grid-template-columns: 1fr 1fr; gap: 18px 0; }
   .vital, .vital:first-child { border-left: 0; padding-left: 0; }
