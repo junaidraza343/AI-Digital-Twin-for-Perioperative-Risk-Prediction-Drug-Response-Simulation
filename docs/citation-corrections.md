@@ -1,4 +1,8 @@
-# Citation corrections (verified 2026-09-09)
+# Citation corrections (verified 2026-09-09, APPLIED 2026-09-10)
+
+> **Status: all corrections below have been applied to `FYP_Chapter1.docx`** — nine
+> reference entries and six in-text attributions. The original is preserved in
+> `.thesis_backup/`. Two changes need your review; they are marked **REVIEW** below.
 
 Each entry below was checked against Crossref / the publisher, not against a
 secondary source. Reference numbers refer to `FYP_Chapter1.docx`.
@@ -167,10 +171,64 @@ pages:
 Every one of these spells its authors out in full — consistent with the pattern
 below.
 
+## [16] — REVIEW: two different papers were conflated
+
+**Was in the thesis:** `Defraeye, T., Bahrami, F., Ding, L., Malini, R. I., Terrier,
+A., & Rossi, R. M. (2022). Predicting transdermal fentanyl delivery using
+physics-based simulations for tailored therapy based on the age. Drug Delivery,
+29(1), 414–425.`
+
+That entry mixed two real papers:
+
+| | Authors | Where |
+|---|---|---|
+| The author list you had | Defraeye, Bahrami, Ding, Malini, Terrier, Rossi | *Front. Pharmacol.* **2020**;11:585393 — "…using **mechanistic** simulations" |
+| The journal/year you had | **Bahrami**, Rossi, Defraeye | *Drug Delivery* **2022**;29(1):**950–969** — "…using **physics-based** simulations" |
+
+Page range 414–425 matches neither.
+
+**Applied:** the 2020 *Frontiers in Pharmacology* paper, because it matches the
+author list you wrote and keeps the body sentence "Defraeye and colleagues [16]"
+correct. **If you meant the 2022 Drug Delivery paper**, switch to
+Bahrami, F., Rossi, R. M., & Defraeye, T. (2022), 29(1), 950–969,
+DOI 10.1080/10717544.2022.2050846 — and change the body text to "Bahrami and
+colleagues".
+
+Worth knowing: the same group later published *An individualized digital twin of a
+patient for transdermal fentanyl therapy* (Bahrami, Rossi, De Nys & Defraeye, *Drug
+Delivery and Translational Research* 2023;13(9):2272–2285,
+DOI 10.1007/s13346-023-01305-y). That is a stronger prior-art citation for the
+digital-twin claim than either of the above.
+
+## [18] — REVIEW: substituted, because the original does not exist
+
+**Was in the thesis:** `Kovatchev, B., et al. (2023). Whole-body metabolic digital
+twin for type-2 diabetes management. Nature Medicine / npj Digital Medicine.`
+
+Two Crossref searches return no such paper. Kovatchev's indexed work is closed-loop
+glucose control and glucose variability, not metabolic digital twins.
+
+**Applied** the verifiable source for the claim the sentence actually makes:
+
+> Shamanna, P., Joshi, S., Thajudeen, M., & Shah, L. (2024). Personalized nutrition
+> in type 2 diabetes remission: application of digital twin technology.
+> *Frontiers in Endocrinology*, 15, 1485464.
+> https://doi.org/10.3389/fendo.2024.1485464
+
+The body text now reads "Shamanna and colleagues [18]". **This is the one
+substitution I could not verify against your intent** — if you had a different study
+in mind, replace it.
+
 ## Still unverified
 
-Not yet DOI-checked: the PK-PD model sources (Eleveld 2018, Joachim 2024) and
-refs [1], [2], [14], [16], [18], [20]-[25].
+Not yet DOI-checked: Joachim 2024 (the norepinephrine PD model), and refs [25]
+(a 1974 Japanese-language conference abstract, not indexed).
+
+**Verified correct and left unchanged:** [1] Shafer & Gregg, [2] Schnider,
+[3] Vital Recorder, [4] VitalDB, [5] Bijker, [6] Hatib, [7] Wijnberge/HYPE (JAMA
+323(11):1052-1060), [8] Lee BJA, [14] Bruynseels, [15] Corral-Acero, [20] Hofer,
+[21] Eichhorn, [22] Pandya, [23] Wesselink (BJA 121(4):706-721), [24] Gregory, and
+Eleveld 2018 (BJA 120(5):942-959).
 
 **Seven of the thesis's citations are wrong: [9], [10], [11], [12], [13], [17],
 [19].** Two distinct failure modes:
