@@ -87,16 +87,50 @@ literature the sentence describes appears to be **Shamanna and colleagues**, e.g
 cite it properly. A reference naming two alternative journals with a slash is
 itself a signal the source was never verified.
 
+## [11] — completely wrong authors
+
+**Currently in the thesis:** `Roh, S. Y., Lee, K. Y., & colleagues. (2025). Machine
+learning methods for the prediction of intraoperative hypotension with biosignal
+waveforms. Medicina, 61(11), 2039.`
+
+**Correct (Crossref, DOI 10.3390/medicina61112039):**
+> Shim, J.-G., Yoon, W., Lee, S. J., Chang, S.-H., Jung, S.-R., & Chung, J. Y.
+> (2025). Machine learning methods for the prediction of intraoperative hypotension
+> with biosignal waveforms. *Medicina*, 61(11), 2039.
+> https://doi.org/10.3390/medicina61112039
+
+Title, journal, volume, issue and article number are all correct — the author list
+is of a different paper entirely. Section 1.2.4's "Roh and colleagues [11]" must
+become "Shim and colleagues [11]".
+
+## [13] — wrong first author, missing volume and pages
+
+**Currently in the thesis:** `Wang, Y., et al. (2025). Towards reliable prediction
+of intraoperative hypotension: a cross-center evaluation of deep learning-based and
+MAP-derived methods. Journal of Clinical Monitoring and Computing.`
+
+**Correct (Crossref, DOI 10.1007/s10877-025-01357-0):**
+> Chaari, N., Winski, G., Hallbäck, M., Lundström, N., Björne, H., & Jacobsson, M.
+> (2025). Towards reliable prediction of intraoperative hypotension: a cross-center
+> evaluation of deep learning-based and MAP-derived methods. *Journal of Clinical
+> Monitoring and Computing*, 40(1), 43–57.
+> https://doi.org/10.1007/s10877-025-01357-0
+
+Section 1.2.5's "A 2025 cross-center evaluation by Wang and colleagues [13]" must
+become "by Chaari and colleagues [13]". This reference matters more than most — it
+is the source of the selection-bias argument the whole project is built around, so
+an examiner is likely to follow it.
+
 ## Still unverified
 
 These have NOT yet been DOI-checked: Hatib 2018 [6], Wijnberge 2020 HYPE [7],
-Lee 2021 [8], Jo 2021 [10], Roh 2025 [11] (cited as "& colleagues"), Wang 2025
-[13] (cited as "et al."), Eleveld 2018, Joachim 2024, Vital Recorder 2018 [3],
+Lee 2021 [8], Jo 2021 [10], Eleveld 2018, Joachim 2024, Vital Recorder 2018 [3],
 VitalDB 2022 [4], Corral-Acero 2020 [15].
 
-Note the pattern: every reference that was written as "Authors.", "& colleagues"
-or a bare "et al." has so far turned out to contain an error. Refs [11] and [13]
-use that form and should be checked next.
+**The pattern is now 5 for 5.** Every reference written as "Authors.",
+"& colleagues" or a bare "et al." — [9], [11], [12], [17], [19] — turned out to be
+misattributed, and [13] with it. Refs whose authors are spelled out in full have so
+far checked out. Treat any remaining abbreviated entry as suspect until verified.
 
 ## Prior art that must be cited
 
