@@ -121,16 +121,66 @@ become "by Chaari and colleagues [13]". This reference matters more than most �
 is the source of the selection-bias argument the whole project is built around, so
 an examiner is likely to follow it.
 
+## [10] — wrong authors, and it reveals a shuffle with [9]
+
+**Currently in the thesis:** `Jo, Y. Y., Jang, J. H., Kwon, J., Lee, H. C., Jung,
+C. W., Byun, S., & Jeong, H. G. (2021). Predicting intraoperative hypotension using
+deep learning with waveforms of arterial blood pressure, electroencephalogram, and
+electrocardiogram: STEP-OP. JMIR Medical Informatics, 9(9), e31311.`
+
+**Correct (Crossref, DOI 10.2196/31311):**
+> Choe, S., Park, E., Shin, W., Koo, B., & Shin, D. (2021). Short-term event
+> prediction in the operating room (STEP-OP) of five-minute intraoperative
+> hypotension using hybrid deep learning. *JMIR Medical Informatics*, 9(9), e31311.
+> https://doi.org/10.2196/31311
+
+Journal, volume, issue and article number are right; the authors and the title are
+not.
+
+### The two errors are connected
+
+- **[9]** is attributed to **Choe** but is actually **Jeong** et al.
+- **[10]** is attributed to **Jo** but is actually **Choe** et al.
+
+"Choe" has migrated from entry [10] to entry [9]. This is the signature of author
+lists being shifted by one during reference-manager import or manual renumbering,
+not of two independent mistakes. **Check every entry either side of these**, and
+check that the numbered citations in the body still point at the work each sentence
+describes. Section 1.2.3's "Jo and colleagues [10] reported a STEP-OP system" should
+read "Choe and colleagues [10]".
+
+## Verified correct — no change needed
+
+Checked against Crossref and found accurate in authors, journal, volume, issue and
+pages:
+
+| Ref | Work | DOI |
+|---|---|---|
+| [3] | Lee & Jung, Vital Recorder, *Sci Rep* 2018;8:1527 | 10.1038/s41598-018-20062-4 |
+| [4] | Lee et al., VitalDB, *Sci Data* 2022;9:279 | 10.1038/s41597-022-01411-5 |
+| [5] | Bijker et al., *Anesthesiology* 2007;107(2):213-220 | 10.1097/01.anes.0000270724.40897.8e |
+| [6] | Hatib et al., *Anesthesiology* 2018;129(4):663-674 | 10.1097/aln.0000000000002300 |
+| [7] | Wijnberge et al., HYPE, *JAMA* 2020;323(11):1052-1060 | 10.1001/jama.2020.0592 |
+| [8] | Lee et al., *BJA* 2021;126(4):808-817 | 10.1016/j.bja.2020.12.035 |
+| [15] | Corral-Acero et al., *Eur Heart J* 2020;41(48):4556-4564 | 10.1093/eurheartj/ehaa159 |
+
+Every one of these spells its authors out in full — consistent with the pattern
+below.
+
 ## Still unverified
 
-These have NOT yet been DOI-checked: Hatib 2018 [6], Wijnberge 2020 HYPE [7],
-Lee 2021 [8], Jo 2021 [10], Eleveld 2018, Joachim 2024, Vital Recorder 2018 [3],
-VitalDB 2022 [4], Corral-Acero 2020 [15].
+Not yet DOI-checked: the PK-PD model sources (Eleveld 2018, Joachim 2024) and
+refs [1], [2], [14], [16], [18], [20]-[25].
 
-**The pattern is now 5 for 5.** Every reference written as "Authors.",
-"& colleagues" or a bare "et al." — [9], [11], [12], [17], [19] — turned out to be
-misattributed, and [13] with it. Refs whose authors are spelled out in full have so
-far checked out. Treat any remaining abbreviated entry as suspect until verified.
+**Seven of the thesis's citations are wrong: [9], [10], [11], [12], [13], [17],
+[19].** Two distinct failure modes:
+
+1. **Abbreviated entries** — every reference written as "Authors.", "& colleagues"
+   or a bare "et al." was misattributed. Entries that spell their authors out in
+   full have so far all checked out.
+2. **A shift between [9] and [10]** — "Choe" belongs to [10] but sits on [9]. That
+   is a mechanical error, so neighbouring entries deserve a look even where they
+   look plausible.
 
 ## Prior art that must be cited
 
