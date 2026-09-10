@@ -1,8 +1,37 @@
 # Citation corrections (verified 2026-09-09, APPLIED 2026-09-10)
 
-> **Status: all corrections below have been applied to `FYP_Chapter1.docx`** — nine
-> reference entries and six in-text attributions. The original is preserved in
-> `.thesis_backup/`. Two changes need your review; they are marked **REVIEW** below.
+> **Status: applied across ALL eight thesis documents** — every stale attribution is
+> gone (verified by full-text sweep, including table cells). Originals are preserved
+> in `.thesis_backup/`. Two changes need your review; they are marked **REVIEW**
+> below.
+>
+> | Document | Reference entries | In-text |
+> |---|---|---|
+> | `FYP_Chapter1.docx` | 9 | 6 |
+> | `FYP_Chapter1 (1).docx` | 9 | 6 |
+> | `AI_Digital_Twin_Chapters_2_and_3.docx` | 2 | 14 |
+> | `AI_Digital_Twin_Chapters_2_and_3 (1).docx` | 2 | 8 |
+> | `FYP_Attributes_Parameters.docx` | – | 1 |
+> | `FYP_Datasets.docx` | – | 1 |
+
+## Two structural problems you should decide on
+
+**1. The same papers are listed twice under different numbers.** Chapter 1 holds
+references [1]–[25]; Chapters 2–3 continue at [26]–[95]. But the transformer paper
+appears as both **[12] and [37]**, and the cross-center evaluation as both **[13]
+and [38]**. Both copies are now corrected, but a thesis should cite each work once
+— merge them and renumber.
+
+**2. Chapters 2–3 had a *different, fuller* author list for the same paper.**
+Chapter 1 said "Liu, J., et al."; Chapters 2–3 said "Liu, J., Wang, X., Zhang, Y.,
+Chen, H., Li, Y., et al." The real authors are Zhu, Shi, Qian, Tong, Hu, Bo & Gu —
+so the longer list was not a partial truth being filled in, it was invented detail.
+Treat any other multi-author list in that document as suspect until checked.
+
+**3. Duplicate files.** `FYP_Chapter1 (1).docx` and
+`AI_Digital_Twin_Chapters_2_and_3 (1).docx` are older copies. Both were corrected so
+you cannot submit a stale one by accident, but you should delete whichever you are
+not using.
 
 Each entry below was checked against Crossref / the publisher, not against a
 secondary source. Reference numbers refer to `FYP_Chapter1.docx`.
