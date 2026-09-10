@@ -250,8 +250,20 @@ in mind, replace it.
 
 ## Still unverified
 
-Not yet DOI-checked: Joachim 2024 (the norepinephrine PD model), and refs [25]
-(a 1974 Japanese-language conference abstract, not indexed).
+**Joachim 2024 — VERIFIED CORRECT.** The norepinephrine model the PK-PD engine is
+built on checks out exactly as cited in `twin/pkpd/params.py`:
+
+> Joachim, J., Cartailler, J., Vallée, F., Lefevre, T., & Callebert, J. (2024).
+> Design of a pharmacokinetic/pharmacodynamic model for administration of low dose
+> peripheral norepinephrine. *British Journal of Clinical Pharmacology*,
+> 90(11), 2861–2869. https://doi.org/10.1111/bcp.16180
+
+Cited as [29] in Chapters 2-3, and correct there too.
+
+Only one reference remains unverifiable: **[25]**, Aoyagi et al. 1974, a
+Japanese-language conference abstract from the 13th Annual Meeting of the Japanese
+Society of Medical Electronics — genuinely not indexed in Crossref. It is a famous
+citation (the origin of pulse oximetry) and is almost certainly fine as written.
 
 **Verified correct and left unchanged:** [1] Shafer & Gregg, [2] Schnider,
 [3] Vital Recorder, [4] VitalDB, [5] Bijker, [6] Hatib, [7] Wijnberge/HYPE (JAMA
