@@ -30,8 +30,8 @@ async function adminPost(url) {
 }
 
 /* Digital Twin — ML Ops console controller. */
-const CYAN = "#5fe3c0", AMBER = "#f2b441",
-      GRID = "rgba(236,231,222,0.07)", INK = "#64716f";
+const CYAN = "#0e5c48", AMBER = "#9a6a00",
+      GRID = "rgba(23,22,15,0.10)", INK = "#8b877b";
 
 /* ---------- clock ---------- */
 setInterval(() => {
@@ -59,7 +59,7 @@ function plot(id, series, opts = {}) {
   ctx.clearRect(0, 0, w, h);
 
   ctx.strokeStyle = GRID; ctx.fillStyle = INK; ctx.lineWidth = 1;
-  ctx.font = "9px 'JetBrains Mono', monospace"; ctx.textAlign = "right"; ctx.textBaseline = "middle";
+  ctx.font = "9px 'DM Mono', monospace"; ctx.textAlign = "right"; ctx.textBaseline = "middle";
   for (let i = 0; i <= 4; i++) {
     const yy = yd[0] + (yd[1] - yd[0]) * i / 4;
     ctx.beginPath(); ctx.moveTo(padL, Y(yy)); ctx.lineTo(w - padR, Y(yy)); ctx.stroke();
@@ -71,7 +71,7 @@ function plot(id, series, opts = {}) {
     ctx.fillText(xx.toFixed(2), X(xx), h - padB + 5);
   }
   if (opts.diagonal) {
-    ctx.strokeStyle = "rgba(236,231,222,0.14)"; ctx.setLineDash([3, 4]);
+    ctx.strokeStyle = "rgba(23,22,15,0.22)"; ctx.setLineDash([3, 4]);
     ctx.beginPath(); ctx.moveTo(X(xd[0]), Y(yd[0])); ctx.lineTo(X(xd[1]), Y(yd[1])); ctx.stroke();
     ctx.setLineDash([]);
   }

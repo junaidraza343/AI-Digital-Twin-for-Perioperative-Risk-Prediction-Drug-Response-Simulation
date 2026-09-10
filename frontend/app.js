@@ -2,9 +2,9 @@
    Reads controls, calls /api/simulate, renders the MAP monitor + Ce strip on canvas. */
 
 const C = {
-  cyan: "#5fe3c0", amber: "#f2b441", red: "#ff5a5f",
-  ne: "#a98bff", band: "rgba(95,227,192,0.13)", grid: "rgba(236,231,222,0.045)",
-  gridMaj: "rgba(236,231,222,0.10)", ink: "#64716f", danger: "rgba(255,90,95,0.05)",
+  cyan: "#0e5c48", amber: "#9a6a00", red: "#c2321e",
+  ne: "#33449c", band: "rgba(14,92,72,0.13)", grid: "rgba(23,22,15,0.07)",
+  gridMaj: "rgba(23,22,15,0.16)", ink: "#8b877b", danger: "rgba(194,50,30,0.045)",
 };
 
 const PRESETS = {
@@ -126,7 +126,7 @@ function render(d) {
   document.getElementById("riskValue").textContent = d.risk.toUpperCase();
   const tile = document.getElementById("riskTile");
   tile.className = "vital risk " + d.risk.toLowerCase();
-  const col = d.risk === "High" ? C.red : d.risk === "Medium" ? C.amber : "#5fe3c0";
+  const col = d.risk === "High" ? C.red : d.risk === "Medium" ? C.amber : "#0e5c48";
   const led = document.getElementById("statusLed");
   led.style.background = col; led.style.boxShadow = `0 0 22px ${col}`;
   setVal("minMap", d.min_map, "mmHg");
@@ -181,7 +181,7 @@ function drawChart(d, progress = 1) {
   ctx.fillRect(padL, Y(d.threshold), plotW, Y(MAP_MIN) - Y(d.threshold));
 
   // grid
-  ctx.lineWidth = 1; ctx.font = "10px 'JetBrains Mono', monospace"; ctx.fillStyle = C.ink;
+  ctx.lineWidth = 1; ctx.font = "10px 'DM Mono', monospace"; ctx.fillStyle = C.ink;
   ctx.textAlign = "right"; ctx.textBaseline = "middle";
   for (let m = MAP_MIN; m <= MAP_MAX; m += 10) {
     ctx.strokeStyle = (m % 20 === 0) ? C.gridMaj : C.grid;
@@ -218,7 +218,7 @@ function drawChart(d, progress = 1) {
     ctx.beginPath();
     const rt = realCase.t_min, rm = realCase.map_real;
     for (let i = 0; i < rt.length; i++) { const x = X(rt[i]), y = Y(rm[i]); i ? ctx.lineTo(x, y) : ctx.moveTo(x, y); }
-    ctx.strokeStyle = "#ece7de"; ctx.lineWidth = 1.6; ctx.globalAlpha = 0.9; ctx.stroke();
+    ctx.strokeStyle = "#17160f"; ctx.lineWidth = 1.6; ctx.globalAlpha = 0.9; ctx.stroke();
     ctx.restore();
   }
 
@@ -262,7 +262,7 @@ function drawCe(d) {
   const Y = c => padT + (1 - c / ceMax) * plotH;
   ctx.clearRect(0, 0, w, h);
   ctx.strokeStyle = C.grid; ctx.lineWidth = 1;
-  ctx.font = "9px 'JetBrains Mono', monospace"; ctx.fillStyle = C.ink;
+  ctx.font = "9px 'DM Mono', monospace"; ctx.fillStyle = C.ink;
   ctx.textAlign = "right"; ctx.textBaseline = "middle";
   for (let i = 0; i <= 2; i++) {
     const c = (ceMax / 2) * i;
@@ -277,7 +277,7 @@ function drawCe(d) {
   for (let i = 0; i < n; i++) ctx.lineTo(X(d.t_min[i]), Y(d.ce[i]));
   ctx.lineTo(X(tMax), Y(0)); ctx.closePath();
   ctx.fillStyle = g; ctx.fill();
-  trace(ctx, d.t_min, d.ce, X, Y, n, "#5fe3c0", 2.0);
+  trace(ctx, d.t_min, d.ce, X, Y, n, "#0e5c48", 2.0);
 }
 
 /* animate the trace sweep on load / preset */
