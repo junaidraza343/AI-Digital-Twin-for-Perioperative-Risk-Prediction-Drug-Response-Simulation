@@ -55,6 +55,14 @@ SP4_MIN_ART_FRACTION = 0.5        # >=50% of the record covered by continuous AR
 # rather than the recorder's sample rate.
 SP4_ART_FFILL_LIMIT_S = 4
 
+# Stage-2 joint loss mixes binary cross-entropy (order 0.1) with a MAP
+# reconstruction error in mmHg^2 (order 300). Summed raw, the classification term
+# is ~0.05% of the loss and the prediction head never trains. Reconstruction is
+# therefore divided by this reference spread (a clinically typical intraoperative
+# MAP deviation) so it is dimensionless and O(1), and lam_recon = 1.0 genuinely
+# means "weigh these two comparably".
+MAP_RECON_SCALE = 20.0
+
 NUMERIC_TRACKS = NUMERIC_TRACKS + DRUG_TRACKS
 
 # Cohort filtering

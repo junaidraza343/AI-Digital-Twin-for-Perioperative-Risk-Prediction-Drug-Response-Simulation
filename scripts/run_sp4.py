@@ -19,6 +19,25 @@ from twin.data.vitaldb_loader import _tracks_tag
 from twin.eval.personalization import delta_identifiability
 from twin.data.splits import make_splits
 from scripts.sp4_pipeline import evaluate_cohort
+from scripts.train_calibration import FeaturePrep
+from twin.models.coupled import CoupledTwin
+
+
+def load_stage1(path, device):
+    """Rebuild the Stage-1 model, its feature prep and column order from disk.
+
+    Stage 1 is the expensive half (per-case teacher fits); re-running Stage 2
+    against a saved checkpoint is what makes iterating on the joint loss
+    affordable.
+    """
+    ckpt = torch.load(path, map_location=device, weights_only=False)
+    cols = ckpt["cols"]
+    model = CoupledTwin(n_features=len(cols), latent_dim=ckpt["latent_dim"]).to(device)
+    model.load_state_dict(ckpt["state"])
+    prep = FeaturePrep()
+    for k, v in ckpt["prep"].items():
+        setattr(prep, k, v)
+    return model, prep, cols
 
 
 def length_sorted_cohort(caseids, eligible):
@@ -46,6 +65,8 @@ def main():
     ap.add_argument("--stage2-epochs", type=int, default=20)
     ap.add_argument("--case-batch", type=int, default=64)
     ap.add_argument("--device", default="cpu")
+    ap.add_argument("--resume-stage1", action="store_true",
+                    help="load results/coupled_stage1.pt and run Stage 2 only")
     args = ap.parse_args()
 
     ids = pd.read_csv(c.RESULTS_DIR / "sp4_cohort.csv")["caseid"].tolist()
@@ -65,12 +86,18 @@ def main():
     print(f"SP4 cohort: {len(cohort)} cases -> train {len(train)} / test {len(test)}"
           f" | device={args.device}", flush=True)
 
-    t0 = time.time()
-    model, prep, cols, info1 = run_stage1_cohort(
-        train, teacher_iters=args.teacher_iters, epochs=args.stage1_epochs,
-        latent_dim=32, device=args.device, teacher_batch_size=args.teacher_batch,
-        progress=True, save_path=c.RESULTS_DIR / "coupled_stage1.pt")
-    print(f"stage1 {info1} in {time.time()-t0:.0f}s", flush=True)
+    stage1_path = c.RESULTS_DIR / "coupled_stage1.pt"
+    if args.resume_stage1:
+        model, prep, cols = load_stage1(stage1_path, args.device)
+        info1 = {"resumed_from": str(stage1_path)}
+        print(f"stage1 resumed from {stage1_path}", flush=True)
+    else:
+        t0 = time.time()
+        model, prep, cols, info1 = run_stage1_cohort(
+            train, teacher_iters=args.teacher_iters, epochs=args.stage1_epochs,
+            latent_dim=32, device=args.device, teacher_batch_size=args.teacher_batch,
+            progress=True, save_path=stage1_path)
+        print(f"stage1 {info1} in {time.time()-t0:.0f}s", flush=True)
 
     t1 = time.time()
     model, info2 = run_stage2_cohort(

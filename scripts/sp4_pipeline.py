@@ -177,7 +177,8 @@ def joint_step_case(model, opt, x, y, case, lam_recon=1.0, lam_prior=1e-3):
     obs = torch.nan_to_num(obs, nan=0.0)
     m = min(pred.shape[1], obs.shape[1])
     err = (pred[:, :m] - obs[:, :m]) * mask[:, :m]
-    recon = (err ** 2).sum() / mask[:, :m].sum().clamp(min=1.0)
+    recon = ((err ** 2).sum() / mask[:, :m].sum().clamp(min=1.0)
+             / (c.MAP_RECON_SCALE ** 2))          # same normalization as the batch path
 
     prior = (delta ** 2).sum(dim=1).mean()
     loss = bce + lam_recon * recon + lam_prior * prior
@@ -215,7 +216,9 @@ def joint_step_batch(model, opt, batch, lam_recon=1.0, lam_prior=1e-3):
     m = min(pred.shape[1], obs.shape[1])
     err = (pred[:, :m] - obs[:, :m]) * mask[:, :m]
     recon_per_case = (err ** 2).sum(dim=1) / mask[:, :m].sum(dim=1).clamp(min=1.0)
-    recon = recon_per_case.mean()
+    # Normalized to MAP_RECON_SCALE^2 so this term is commensurate with the BCE
+    # above rather than drowning it (see twin/config.py).
+    recon = recon_per_case.mean() / (c.MAP_RECON_SCALE ** 2)
 
     prior = (delta ** 2).sum(dim=1).mean()
     loss = bce + lam_recon * recon + lam_prior * prior

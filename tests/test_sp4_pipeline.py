@@ -141,3 +141,35 @@ def test_evaluate_cohort_reports_heldout_prediction_and_personalization(small_wi
     assert res["n_cases"] == 1 and res["n_windows"] > 0
     assert 0.0 <= res["ece"] <= 1.0 and 0.0 <= res["brier"] <= 1.0
     assert res["population_rmse"] > 0 and res["personalized_rmse"] > 0
+
+
+def test_stage2_reconstruction_is_scale_normalized_against_bce(small_windows):
+    """The joint loss must not let reconstruction swamp the prediction term.
+
+    recon is a mean squared error in mmHg^2, so on real cases it sits around 340
+    while BCE sits around 0.17. Summed raw at lam_recon=1.0 the classification
+    signal is ~0.05% of the loss and the prediction head never trains. Reported
+    recon must therefore be dimensionless and O(1) for a clinically typical error.
+    """
+    import torch
+    from scripts.sp4_pipeline import joint_step_batch, load_case
+    from twin.models.coupled import CoupledTwin
+
+    cohort, loader = _cohort_and_loader()
+    caseid, static_row = cohort[0]
+    case = load_case(caseid, static_row, loader_fn=loader, device="cpu")
+    w = case["windows"]
+    from scripts.train_calibration import FeaturePrep
+    cols = [c_ for c_ in w.columns if c_ not in ("caseid", "t_end", "y", "category")]
+    prep = FeaturePrep().fit(w[cols])
+    x = torch.tensor(prep.transform(w[cols]), dtype=torch.float32)
+    y = torch.tensor(w["y"].to_numpy(dtype=float), dtype=torch.float32)
+
+    model = CoupledTwin(n_features=len(cols))
+    opt = torch.optim.Adam(model.parameters(), lr=1e-3)
+    out = joint_step_batch(model, opt, [(case, x, y)])
+
+    # A twin that is wrong by roughly a normal MAP spread should score near 1,
+    # not in the hundreds.
+    assert 0.01 < out["recon"] < 25.0, out
+    assert out["recon"] < 100 * out["bce"], out
