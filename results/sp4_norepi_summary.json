@@ -1,0 +1,8 @@
+{
+  "n_cases": 34,
+  "n_vasopressor_candidates": 38,
+  "population_rmse_mean": 22.337263807668915,
+  "personalized_rmse_mean": 18.563076341963015,
+  "improved_case_count": 34,
+  "note": "Case series, not a trained result: VitalDB provides too few vasopressor cases to fit a calibration head. Deltas here come from the per-case teacher fit through the differentiable twin."
+}

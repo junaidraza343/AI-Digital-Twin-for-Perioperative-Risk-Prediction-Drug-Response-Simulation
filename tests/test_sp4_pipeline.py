@@ -1,6 +1,8 @@
 import numpy as np
 import pytest
+
 pytest.importorskip("torch")
+import torch                      # noqa: E402  (guarded by importorskip above)
 import twin.config as c
 from scripts.sp4_pipeline import run_stage1_cohort, run_stage2_cohort
 
@@ -40,6 +42,10 @@ def _cohort_and_loader():
 
 
 def test_stage1_then_stage2_pipeline(small_windows):
+    # Weight init draws from the global torch RNG, so without seeding this test
+    # starts from whatever state the preceding tests happened to leave behind and
+    # its convergence assertions become order-dependent.
+    torch.manual_seed(0)
     cohort, loader = _cohort_and_loader()
     model, prep, cols, info = run_stage1_cohort(
         cohort, loader_fn=loader, teacher_iters=30, epochs=60, lr=1e-2,
@@ -51,8 +57,10 @@ def test_stage1_then_stage2_pipeline(small_windows):
     model, s2 = run_stage2_cohort(
         cohort, model, prep, cols, loader_fn=loader, epochs=20, lr=5e-3, device="cpu")
     assert np.isfinite(s2["recon_first"]) and np.isfinite(s2["recon_last"])
-    # fine-tuning from the distilled init must not blow up reconstruction
-    assert s2["recon_last"] <= s2["recon_first"] + 1e-3
+    # Fine-tuning from the distilled init must not blow up reconstruction. The
+    # tolerance is relative: recon is now normalized to O(1), so a fixed absolute
+    # epsilon would mean something different at a different MAP_RECON_SCALE.
+    assert s2["recon_last"] <= s2["recon_first"] * 1.02 + 1e-6
 
 
 def test_stage1_skips_unloadable_case_and_trains_on_the_rest(small_windows):

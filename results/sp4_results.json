@@ -1,0 +1,35 @@
+{
+  "n_cases": 840,
+  "n_train": 624,
+  "n_test": 138,
+  "stage1": {
+    "resumed_from": "/Users/junaid/Documents/FYP/results/coupled_stage1.pt"
+  },
+  "stage2": {
+    "n_cases": 590,
+    "recon_first": 0.9224615573883057,
+    "recon_last": 0.8398924112319947
+  },
+  "held_out": {
+    "n_cases": 127,
+    "n_windows": 27982,
+    "prevalence": 0.0391680365949539,
+    "auroc": 0.8254534996641674,
+    "auprc": 0.17714424684748348,
+    "ppv": 0.18620443173695497,
+    "ece": 0.0067318176517382885,
+    "brier": 0.03464257106643473,
+    "population_rmse": 21.67230478968754,
+    "personalized_rmse": 20.916870903502044,
+    "improved_case_count": 75
+  },
+  "delta_std": [
+    0.37672799825668335,
+    0.49710118770599365,
+    0.5075418949127197,
+    0.4185885190963745,
+    0.4985189735889435,
+    0.3397509753704071
+  ],
+  "teacher_iters": 100
+}
